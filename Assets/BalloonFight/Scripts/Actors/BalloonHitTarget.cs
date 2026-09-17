@@ -1,6 +1,6 @@
 using UnityEngine;
 
-internal sealed class BalloonHitTarget : MonoBehaviour
+public sealed class BalloonHitTarget : MonoBehaviour
 {
     private Fighter _owner;
 

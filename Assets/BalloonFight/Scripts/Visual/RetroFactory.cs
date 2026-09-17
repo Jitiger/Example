@@ -1,6 +1,6 @@
 using UnityEngine;
 
-internal sealed class RetroFactory : MonoBehaviour
+public sealed class RetroFactory : MonoBehaviour
 {
     [SerializeField] private Color _background = new Color32(9, 20, 46, 255);
     [SerializeField] private float _balloonSpacing = 0.56f;

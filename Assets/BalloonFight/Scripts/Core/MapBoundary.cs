@@ -1,6 +1,6 @@
 using UnityEngine;
 
-internal sealed class MapBoundary : MonoBehaviour
+public sealed class MapBoundary : MonoBehaviour
 {
     [SerializeField] private float _topLimit = 4.8f;
     [SerializeField] private float _wrapPadding = 0.45f;

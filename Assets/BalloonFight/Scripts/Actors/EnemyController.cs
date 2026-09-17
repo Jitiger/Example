@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-internal sealed class EnemyController : Fighter, IPoolable
+public sealed class EnemyController : Fighter, IPoolable
 {
     [Header("적 이동")]
     [SerializeField] private int _balloonLimit = 1;

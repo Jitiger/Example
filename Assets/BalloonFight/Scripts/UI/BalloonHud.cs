@@ -1,6 +1,6 @@
 using UnityEngine;
 
-internal sealed class BalloonHud : MonoBehaviour
+public sealed class BalloonHud : MonoBehaviour
 {
     [SerializeField] private Vector2 _referenceSize = new(1280f, 720f);
     [SerializeField] private int _hudFontSize = 22;

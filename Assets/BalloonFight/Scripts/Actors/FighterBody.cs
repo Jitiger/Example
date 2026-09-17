@@ -1,6 +1,6 @@
 using UnityEngine;
 
-internal sealed class FighterBody : MonoBehaviour
+public sealed class FighterBody : MonoBehaviour
 {
     private Fighter _owner;
 

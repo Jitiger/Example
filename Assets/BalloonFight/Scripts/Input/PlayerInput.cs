@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-internal sealed class PlayerInput : MonoBehaviour
+public sealed class PlayerInput : MonoBehaviour
 {
     [Header("1P")]
     [SerializeField] private Key[] _playerOneLeft = { Key.A };

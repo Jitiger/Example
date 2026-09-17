@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-internal abstract class Fighter : MonoBehaviour
+public abstract class Fighter : MonoBehaviour
 {
     [Header("공통 물리")]
     [SerializeField] private Vector2 _bodySize = new(0.58f, 0.78f);

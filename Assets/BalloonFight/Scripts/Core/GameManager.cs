@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-internal sealed class GameManager : MonoBehaviour
+public sealed class GameManager : MonoBehaviour
 {
     [Header("게임 진행")]
     [SerializeField] private int _targetFrameRate = 60;

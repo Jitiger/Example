@@ -15,7 +15,7 @@ internal struct PlatformDefinition
     internal Vector2 Size => _size;
 }
 
-internal sealed class BalloonStageBuilder : MonoBehaviour
+public sealed class BalloonStageBuilder : MonoBehaviour
 {
     [SerializeField] private Color _starColor = new Color32(205, 226, 255, 255);
     [SerializeField] private int _starCount = 46;
