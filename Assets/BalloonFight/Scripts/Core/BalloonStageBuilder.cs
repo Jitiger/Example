@@ -1,8 +1,12 @@
+using BalloonFight.Config;
+using BalloonFight.Visual;
 using UnityEngine;
 
-public static class BalloonStageBuilder
+namespace BalloonFight.Core;
+
+internal static class BalloonStageBuilder
 {
-    public static void Build(Transform parent, BalloonGameConfig config, BalloonVisualConfig visual)
+    internal static void Build(Transform parent, BalloonGameConfig config, BalloonVisualConfig visual)
     {
         Transform stage = new GameObject("Stage").transform;
         stage.SetParent(parent);
@@ -29,7 +33,13 @@ public static class BalloonStageBuilder
         GameObject platform = RetroFactory.CreateBlock(parent, "Platform", position, size, visual.PlatformColor, visual.PlatformOrder);
         platform.AddComponent<BoxCollider2D>();
 
-        GameObject top = RetroFactory.CreateBlock(platform.transform, "Top", Vector2.zero, visual.PlatformTopSize, visual.PlatformTopColor, visual.PlatformTopOrder);
+        GameObject top = RetroFactory.CreateBlock(
+            platform.transform,
+            "Top",
+            Vector2.zero,
+            visual.PlatformTopSize,
+            visual.PlatformTopColor,
+            visual.PlatformTopOrder);
         top.transform.localPosition = visual.PlatformTopPosition;
     }
 }

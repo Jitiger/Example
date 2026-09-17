@@ -1,5 +1,7 @@
 using UnityEngine;
 
+namespace BalloonFight.Actors;
+
 internal sealed class BalloonBody : MonoBehaviour
 {
     private BalloonActor _owner;

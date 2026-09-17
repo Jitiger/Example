@@ -1,6 +1,10 @@
+using BalloonFight.Actors;
+using BalloonFight.Config;
 using UnityEngine;
 
-public static class RetroFactory
+namespace BalloonFight.Visual;
+
+internal static class RetroFactory
 {
     private static BalloonVisualConfig _config;
     public static void Configure(BalloonVisualConfig config)
@@ -28,7 +32,13 @@ public static class RetroFactory
     private static Sprite _playerTwoBalloonB;
     private static Sprite _pinkBalloon;
 
-    internal static GameObject CreateBlock(Transform parent, string objectName, Vector2 position, Vector2 size, Color color, int sortingOrder)
+    internal static GameObject CreateBlock(
+        Transform parent,
+        string objectName,
+        Vector2 position,
+        Vector2 size,
+        Color color,
+        int sortingOrder)
     {
         GameObject block = new(objectName);
         block.transform.SetParent(parent);

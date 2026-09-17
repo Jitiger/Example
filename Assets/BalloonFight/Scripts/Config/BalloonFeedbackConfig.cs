@@ -1,5 +1,7 @@
 using UnityEngine;
 
+namespace BalloonFight.Config;
+
 [CreateAssetMenu(fileName = "BalloonFeedbackConfig", menuName = "Balloon Fight/BalloonFeedbackConfig")]
 public sealed class BalloonFeedbackConfig : ScriptableObject
 {
@@ -21,4 +23,3 @@ public sealed class BalloonFeedbackConfig : ScriptableObject
     public int SortingOrder => _sortingOrder;
     public Color Color => _color;
 }
-

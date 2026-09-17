@@ -1,4 +1,8 @@
+using BalloonFight.Config;
+using BalloonFight.Pooling;
 using UnityEngine;
+
+namespace BalloonFight.Feedback;
 
 public sealed class BalloonPopEffect : MonoBehaviour, IPoolable
 {
@@ -65,4 +69,3 @@ public sealed class BalloonPopEffect : MonoBehaviour, IPoolable
         }
     }
 }
-

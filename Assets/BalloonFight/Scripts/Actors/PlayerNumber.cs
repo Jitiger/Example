@@ -1,3 +1,5 @@
+namespace BalloonFight.Actors;
+
 public enum PlayerNumber
 {
     One,

@@ -1,3 +1,5 @@
+namespace BalloonFight.Pooling;
+
 public interface IPoolable
 {
     void OnSpawned();

@@ -1,4 +1,7 @@
+using BalloonFight.Actors;
 using UnityEngine;
+
+namespace BalloonFight.Config;
 
 [CreateAssetMenu(fileName = "BalloonPrefabConfig", menuName = "Balloon Fight/Prefabs")]
 public sealed class BalloonPrefabConfig : ScriptableObject

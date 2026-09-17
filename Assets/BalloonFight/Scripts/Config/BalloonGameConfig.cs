@@ -1,4 +1,7 @@
+using BalloonFight.Actors;
 using UnityEngine;
+
+namespace BalloonFight.Config;
 
 [System.Serializable]
 internal struct PlatformDefinition

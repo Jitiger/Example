@@ -1,6 +1,9 @@
 using System.Collections;
+using BalloonFight.Config;
+using BalloonFight.Core;
 using UnityEngine;
-using UnityEngine.InputSystem;
+
+namespace BalloonFight.Actors;
 
 internal sealed class BalloonPlayer : BalloonActor
 {
@@ -11,10 +14,7 @@ internal sealed class BalloonPlayer : BalloonActor
     internal PlayerNumber PlayerNumber => _playerNumber;
     internal bool IsAvailable => gameObject.activeSelf && !IsDead;
 
-    internal void InitializePlayer(
-        BalloonFightRuntime game,
-        BalloonGameConfig config,
-        PlayerNumber playerNumber)
+    internal void InitializePlayer(BalloonFightRuntime game, BalloonGameConfig config, PlayerNumber playerNumber)
     {
         _playerNumber = playerNumber;
         Initialize(game, config, config.PlayerBalloonCount);
@@ -123,5 +123,4 @@ internal sealed class BalloonPlayer : BalloonActor
         float tilt = Mathf.Clamp(-Body.linearVelocity.x * Config.VisualTiltMultiplier, -maximumTilt, maximumTilt);
         _visual.localRotation = Quaternion.Euler(0f, 0f, tilt);
     }
-
 }

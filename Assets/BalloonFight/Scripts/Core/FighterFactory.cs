@@ -1,23 +1,31 @@
+using BalloonFight.Actors;
+using BalloonFight.Config;
+using BalloonFight.Visual;
 using UnityEngine;
 
-public static class FighterFactory
+namespace BalloonFight.Core;
+
+internal static class FighterFactory
 {
-    public static GameObject CreatePlayerObject(
+    internal static GameObject CreatePlayerPrefabObject(
         Transform parent,
         BalloonGameConfig config,
         PlayerNumber playerNumber)
     {
-        return CreatePlayer(parent, config, playerNumber).gameObject;
+        return CreatePlayer(parent, config, null, playerNumber).gameObject;
     }
 
-    public static GameObject CreateEnemyObject(Transform parent, BalloonGameConfig config, int variation)
+    internal static GameObject CreateEnemyPrefabObject(Transform parent, BalloonGameConfig config, int variation)
     {
-        return CreateEnemy(parent, config, variation).gameObject;
+        return CreateEnemy(parent, config, null, variation).gameObject;
     }
 
-    internal static BalloonPlayer CreatePlayer(Transform parent, BalloonGameConfig config, PlayerNumber playerNumber)
+    internal static BalloonPlayer CreatePlayer(
+        Transform parent,
+        BalloonGameConfig config,
+        BalloonPrefabConfig prefabs,
+        PlayerNumber playerNumber)
     {
-        BalloonPrefabConfig prefabs = Resources.Load<BalloonPrefabConfig>(nameof(BalloonPrefabConfig));
         GameObject prefab = prefabs == null ? null : prefabs.GetPlayer(playerNumber);
         if (prefab != null)
         {
@@ -26,6 +34,7 @@ public static class FighterFactory
             instance.GetComponent<BalloonBody>().SetOwner(actor);
             return actor;
         }
+
         int variation = (int)playerNumber;
         GameObject fighter = CreateBody(
             parent,
@@ -40,9 +49,12 @@ public static class FighterFactory
         return player;
     }
 
-    internal static BalloonEnemy CreateEnemy(Transform parent, BalloonGameConfig config, int variation)
+    internal static BalloonEnemy CreateEnemy(
+        Transform parent,
+        BalloonGameConfig config,
+        BalloonPrefabConfig prefabs,
+        int variation)
     {
-        BalloonPrefabConfig prefabs = Resources.Load<BalloonPrefabConfig>(nameof(BalloonPrefabConfig));
         GameObject prefab = prefabs == null ? null : prefabs.GetEnemy(variation);
         if (prefab != null)
         {
@@ -51,6 +63,7 @@ public static class FighterFactory
             instance.GetComponent<BalloonBody>().SetOwner(actor);
             return actor;
         }
+
         GameObject fighter = CreateBody(parent, $"Enemy {variation + 1}", Vector2.zero, config.EnemyGravity, config);
         RetroFactory.CreateFighter(fighter.transform, false, config.EnemyBalloonCount, variation);
 
@@ -59,7 +72,12 @@ public static class FighterFactory
         return enemy;
     }
 
-    private static GameObject CreateBody(Transform parent, string objectName, Vector2 position, float gravityScale, BalloonGameConfig config)
+    private static GameObject CreateBody(
+        Transform parent,
+        string objectName,
+        Vector2 position,
+        float gravityScale,
+        BalloonGameConfig config)
     {
         GameObject fighter = new(objectName);
         fighter.transform.SetParent(parent);

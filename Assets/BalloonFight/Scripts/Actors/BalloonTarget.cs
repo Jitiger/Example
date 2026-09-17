@@ -1,5 +1,7 @@
 using UnityEngine;
 
+namespace BalloonFight.Actors;
+
 internal sealed class BalloonTarget : MonoBehaviour
 {
     private BalloonActor _owner;
@@ -14,11 +16,8 @@ internal sealed class BalloonTarget : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other)
     {
         BalloonBody attackingBody = other.GetComponent<BalloonBody>();
-        if (_owner == null
-            || attackingBody == null
-            || attackingBody.Owner == null
-            || attackingBody.Owner == _owner
-            || !_owner.CanReceiveHitFrom(attackingBody.Owner))
+        if (_owner == null || attackingBody == null || attackingBody.Owner == null
+            || attackingBody.Owner == _owner || !_owner.CanReceiveHitFrom(attackingBody.Owner))
         {
             return;
         }

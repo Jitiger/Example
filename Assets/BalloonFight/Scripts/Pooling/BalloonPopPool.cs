@@ -1,6 +1,10 @@
 using System.Collections.Generic;
+using BalloonFight.Config;
+using BalloonFight.Feedback;
 using UnityEngine;
 using UnityEngine.Pool;
+
+namespace BalloonFight.Pooling;
 
 internal sealed class BalloonPopPool
 {
@@ -81,4 +85,3 @@ internal sealed class BalloonPopPool
         return effect;
     }
 }
-

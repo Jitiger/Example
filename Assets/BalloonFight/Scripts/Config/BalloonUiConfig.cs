@@ -1,5 +1,7 @@
 using UnityEngine;
 
+namespace BalloonFight.Config;
+
 [CreateAssetMenu(fileName = "BalloonUiConfig", menuName = "Balloon Fight/BalloonUiConfig")]
 public sealed class BalloonUiConfig : ScriptableObject
 {

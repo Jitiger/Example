@@ -1,5 +1,9 @@
 using System.Collections.Generic;
+using BalloonFight.Config;
+using BalloonFight.Core;
 using UnityEngine;
+
+namespace BalloonFight.Actors;
 
 internal abstract class BalloonActor : MonoBehaviour
 {

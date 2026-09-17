@@ -11,9 +11,10 @@ Unity 6에서 바로 실행되는 벌룬파이트 스타일 프로토타입입�
 
 ## 코드 구조
 
-- `Scripts/Core`: 게임 흐름, 스테이지 및 캐릭터 생성
+- `Scripts/Core`: 게임 흐름, 스폰, 화면 경계 및 캐릭터 생성
 - `Scripts/Actors`: 플레이어, 적, 풍선 충돌과 공통 캐릭터 로직
 - `Scripts/Config`: 조작감과 밸런스 값을 관리하는 `ScriptableObject`
+- `Scripts/Input`: 설정된 키를 읽고 실제 입력을 판정
 - `Scripts/Pooling`: 적 오브젝트 풀과 풀 수명주기
 - `Scripts/UI`: HUD 표시
 - `Scripts/Visual`: 임시 런타임 픽셀 그래픽 생성

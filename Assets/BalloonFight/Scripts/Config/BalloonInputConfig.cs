@@ -1,5 +1,8 @@
+using BalloonFight.Actors;
 using UnityEngine;
 using UnityEngine.InputSystem;
+
+namespace BalloonFight.Config;
 
 [CreateAssetMenu(fileName = "BalloonInputConfig", menuName = "Balloon Fight/Input Config")]
 public sealed class BalloonInputConfig : ScriptableObject
@@ -17,67 +20,21 @@ public sealed class BalloonInputConfig : ScriptableObject
     [Header("Shared")]
     [SerializeField] private Key _restart = Key.R;
 
-    internal string RestartLabel => _restart.ToString();
-    internal bool RestartPressed => IsPressed(_restart);
+    internal Key Restart => _restart;
 
-    internal float GetHorizontal(PlayerNumber player)
+    internal Key[] GetLeftKeys(PlayerNumber playerNumber)
     {
-        Key[] left = player == PlayerNumber.One ? _playerOneLeft : _playerTwoLeft;
-        Key[] right = player == PlayerNumber.One ? _playerOneRight : _playerTwoRight;
-        return (IsHeld(right) ? 1f : 0f) - (IsHeld(left) ? 1f : 0f);
+        return playerNumber == PlayerNumber.One ? _playerOneLeft : _playerTwoLeft;
     }
 
-    internal bool IsFlapPressed(PlayerNumber player)
+    internal Key[] GetRightKeys(PlayerNumber playerNumber)
     {
-        return WasPressed(player == PlayerNumber.One ? _playerOneFlap : _playerTwoFlap);
+        return playerNumber == PlayerNumber.One ? _playerOneRight : _playerTwoRight;
     }
 
-    internal string GetControlsLabel(PlayerNumber player)
+    internal Key[] GetFlapKeys(PlayerNumber playerNumber)
     {
-        Key[] left = player == PlayerNumber.One ? _playerOneLeft : _playerTwoLeft;
-        Key[] right = player == PlayerNumber.One ? _playerOneRight : _playerTwoRight;
-        Key[] flap = player == PlayerNumber.One ? _playerOneFlap : _playerTwoFlap;
-        return $"{string.Join("/", left)} / {string.Join("/", right)} : move    {string.Join("/", flap)} : flap";
+        return playerNumber == PlayerNumber.One ? _playerOneFlap : _playerTwoFlap;
     }
 
-    private static bool IsPressed(Key key)
-    {
-        return Keyboard.current != null && Keyboard.current[key].wasPressedThisFrame;
-    }
-
-    private static bool IsHeld(Key[] keys)
-    {
-        if (Keyboard.current == null || keys == null)
-        {
-            return false;
-        }
-
-        foreach (Key key in keys)
-        {
-            if (Keyboard.current[key].isPressed)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static bool WasPressed(Key[] keys)
-    {
-        if (Keyboard.current == null || keys == null)
-        {
-            return false;
-        }
-
-        foreach (Key key in keys)
-        {
-            if (Keyboard.current[key].wasPressedThisFrame)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
 }

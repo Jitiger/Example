@@ -1,6 +1,12 @@
 using System.Collections.Generic;
+using BalloonFight.Actors;
+using BalloonFight.Config;
+using BalloonFight.Core;
+using BalloonFight.Visual;
 using UnityEditor;
 using UnityEngine;
+
+namespace BalloonFight.Editor;
 
 internal static class BalloonPrefabBuilder
 {
@@ -41,7 +47,7 @@ internal static class BalloonPrefabBuilder
                 if (players[index] == null)
                 {
                     players[index] = Save(
-                        FighterFactory.CreatePlayerObject(root.transform, game, (PlayerNumber)index),
+                        FighterFactory.CreatePlayerPrefabObject(root.transform, game, (PlayerNumber)index),
                         assetName);
                 }
             }
@@ -53,7 +59,9 @@ internal static class BalloonPrefabBuilder
                 enemies[index] = LoadPrefab(assetName);
                 if (enemies[index] == null)
                 {
-                    enemies[index] = Save(FighterFactory.CreateEnemyObject(root.transform, game, index), assetName);
+                    enemies[index] = Save(
+                        FighterFactory.CreateEnemyPrefabObject(root.transform, game, index),
+                        assetName);
                 }
             }
 

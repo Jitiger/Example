@@ -1,5 +1,9 @@
 using System.Collections;
+using BalloonFight.Config;
+using BalloonFight.Pooling;
 using UnityEngine;
+
+namespace BalloonFight.Actors;
 
 internal sealed class BalloonEnemy : BalloonActor, IPoolable
 {
@@ -114,6 +118,9 @@ internal sealed class BalloonEnemy : BalloonActor, IPoolable
     private IEnumerator ReturnAfterDelay()
     {
         yield return new WaitForSeconds(Config.EnemyDeathDelay);
-        _pool.Release(this);
+        if (_pool != null)
+        {
+            _pool.Release(this);
+        }
     }
 }

@@ -1,19 +1,26 @@
 using System.Collections.Generic;
+using BalloonFight.Actors;
+using BalloonFight.Config;
+using BalloonFight.Core;
 using UnityEngine;
 using UnityEngine.Pool;
+
+namespace BalloonFight.Pooling;
 
 internal sealed class BalloonEnemyPool
 {
     private readonly BalloonGameConfig _config;
+    private readonly BalloonPrefabConfig _prefabs;
     private readonly Transform _parent;
     private readonly ObjectPool<BalloonEnemy> _pool;
     private int _variation;
     private readonly HashSet<BalloonEnemy> _leased = new();
 
-    internal BalloonEnemyPool(Transform parent, BalloonGameConfig config)
+    internal BalloonEnemyPool(Transform parent, BalloonGameConfig config, BalloonPrefabConfig prefabs)
     {
         _parent = parent;
         _config = config;
+        _prefabs = prefabs;
         _pool = new ObjectPool<BalloonEnemy>(
             CreateEnemy,
             OnGet,
@@ -58,7 +65,7 @@ internal sealed class BalloonEnemyPool
 
     private BalloonEnemy CreateEnemy()
     {
-        BalloonEnemy enemy = FighterFactory.CreateEnemy(_parent, _config, _variation++);
+        BalloonEnemy enemy = FighterFactory.CreateEnemy(_parent, _config, _prefabs, _variation++);
         enemy.ConfigurePool(this);
         enemy.gameObject.SetActive(false);
         return enemy;

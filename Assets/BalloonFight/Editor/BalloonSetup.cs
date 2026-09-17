@@ -1,5 +1,8 @@
+using BalloonFight.Config;
 using UnityEditor;
 using UnityEngine;
+
+namespace BalloonFight.Editor;
 
 internal static class BalloonSetup
 {
