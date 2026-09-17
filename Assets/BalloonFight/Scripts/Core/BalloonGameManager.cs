@@ -2,109 +2,110 @@ using BalloonFight.Actors;
 using BalloonFight.Config;
 using UnityEngine;
 
-namespace BalloonFight.Core;
-
-internal sealed class BalloonGameManager
+namespace BalloonFight.Core
 {
-    private readonly BalloonGameConfig _config;
-    private readonly int[] _lives = new int[PlayerRoster.Count];
-    private int _score;
-    private int _phase;
-    private bool _isGameOver;
-    private bool _isAllClear;
-    private bool _isChangingPhase;
-
-    internal int Score => _score;
-    internal int Phase => _phase;
-    internal bool IsGameOver => _isGameOver;
-    internal bool IsAllClear => _isAllClear;
-    internal bool IsChangingPhase => _isChangingPhase;
-    internal bool IsPlaying => !_isGameOver && !_isAllClear;
-
-    internal BalloonGameManager(BalloonGameConfig config)
+    internal sealed class BalloonGameManager
     {
-        _config = config;
-        Reset();
-    }
+        private readonly BalloonGameConfig _config;
+        private readonly int[] _lives = new int[PlayerRoster.Count];
+        private int _score;
+        private int _phase;
+        private bool _isGameOver;
+        private bool _isAllClear;
+        private bool _isChangingPhase;
 
-    internal int GetLives(PlayerNumber playerNumber)
-    {
-        return _lives[(int)playerNumber];
-    }
+        internal int Score => _score;
+        internal int Phase => _phase;
+        internal bool IsGameOver => _isGameOver;
+        internal bool IsAllClear => _isAllClear;
+        internal bool IsChangingPhase => _isChangingPhase;
+        internal bool IsPlaying => !_isGameOver && !_isAllClear;
 
-    internal bool RegisterEnemyDefeat(int activeEnemyCount)
-    {
-        _score += _config.EnemyScore;
-        if (activeEnemyCount > 0 || _isChangingPhase || !IsPlaying)
+        internal BalloonGameManager(BalloonGameConfig config)
         {
-            return false;
+            _config = config;
+            Reset();
         }
 
-        if (_phase >= _config.MaximumPhase)
+        internal int GetLives(PlayerNumber playerNumber)
         {
-            _isAllClear = true;
-            return false;
+            return _lives[(int)playerNumber];
         }
 
-        _isChangingPhase = true;
-        return true;
-    }
-
-    internal bool RegisterPlayerDefeat(PlayerNumber playerNumber)
-    {
-        int index = (int)playerNumber;
-        _lives[index] = Mathf.Max(0, _lives[index] - 1);
-        if (_lives[index] > 0)
+        internal bool RegisterEnemyDefeat(int activeEnemyCount)
         {
-            return true;
-        }
-
-        if (AllPlayersEliminated())
-        {
-            _isGameOver = true;
-        }
-
-        return false;
-    }
-
-    internal bool CanRespawn(PlayerNumber playerNumber)
-    {
-        return IsPlaying && _lives[(int)playerNumber] > 0;
-    }
-
-    internal void AdvancePhase()
-    {
-        _phase++;
-    }
-
-    internal void CompletePhaseChange()
-    {
-        _isChangingPhase = false;
-    }
-
-    internal void Reset()
-    {
-        _score = 0;
-        _phase = 1;
-        _isGameOver = false;
-        _isAllClear = false;
-        _isChangingPhase = false;
-        for (int index = 0; index < _lives.Length; index++)
-        {
-            _lives[index] = _config.StartingLives;
-        }
-    }
-
-    private bool AllPlayersEliminated()
-    {
-        foreach (int life in _lives)
-        {
-            if (life > 0)
+            _score += _config.EnemyScore;
+            if (activeEnemyCount > 0 || _isChangingPhase || !IsPlaying)
             {
                 return false;
             }
+
+            if (_phase >= _config.MaximumPhase)
+            {
+                _isAllClear = true;
+                return false;
+            }
+
+            _isChangingPhase = true;
+            return true;
         }
 
-        return true;
+        internal bool RegisterPlayerDefeat(PlayerNumber playerNumber)
+        {
+            int index = (int)playerNumber;
+            _lives[index] = Mathf.Max(0, _lives[index] - 1);
+            if (_lives[index] > 0)
+            {
+                return true;
+            }
+
+            if (AllPlayersEliminated())
+            {
+                _isGameOver = true;
+            }
+
+            return false;
+        }
+
+        internal bool CanRespawn(PlayerNumber playerNumber)
+        {
+            return IsPlaying && _lives[(int)playerNumber] > 0;
+        }
+
+        internal void AdvancePhase()
+        {
+            _phase++;
+        }
+
+        internal void CompletePhaseChange()
+        {
+            _isChangingPhase = false;
+        }
+
+        internal void Reset()
+        {
+            _score = 0;
+            _phase = 1;
+            _isGameOver = false;
+            _isAllClear = false;
+            _isChangingPhase = false;
+            for (int index = 0; index < _lives.Length; index++)
+            {
+                _lives[index] = _config.StartingLives;
+            }
+        }
+
+        private bool AllPlayersEliminated()
+        {
+            foreach (int life in _lives)
+            {
+                if (life > 0)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }

@@ -4,105 +4,106 @@ using BalloonFight.Config;
 using BalloonFight.Pooling;
 using UnityEngine;
 
-namespace BalloonFight.Core;
-
-internal sealed class BalloonSpawner
+namespace BalloonFight.Core
 {
-    private readonly BalloonFightRuntime _game;
-    private readonly BalloonGameConfig _config;
-    private readonly BalloonPrefabConfig _prefabs;
-    private readonly Transform _parent;
-    private readonly BalloonEnemyPool _enemyPool;
-    private readonly List<BalloonEnemy> _enemies = new();
-    private readonly BalloonPlayer[] _players = new BalloonPlayer[PlayerRoster.Count];
-
-    internal int ActiveEnemyCount => _enemies.Count;
-
-    internal BalloonSpawner(
-        Transform parent,
-        BalloonFightRuntime game,
-        BalloonGameConfig config,
-        BalloonPrefabConfig prefabs)
+    internal sealed class BalloonSpawner
     {
-        _parent = parent;
-        _game = game;
-        _config = config;
-        _prefabs = prefabs;
-        _enemyPool = new BalloonEnemyPool(parent, config, prefabs);
-    }
+        private readonly BalloonFightRuntime _game;
+        private readonly BalloonGameConfig _config;
+        private readonly BalloonPrefabConfig _prefabs;
+        private readonly Transform _parent;
+        private readonly BalloonEnemyPool _enemyPool;
+        private readonly List<BalloonEnemy> _enemies = new();
+        private readonly BalloonPlayer[] _players = new BalloonPlayer[PlayerRoster.Count];
 
-    internal void SpawnAllPlayers()
-    {
-        SpawnPlayer(PlayerNumber.One);
-        SpawnPlayer(PlayerNumber.Two);
-    }
+        internal int ActiveEnemyCount => _enemies.Count;
 
-    internal BalloonPlayer SpawnPlayer(PlayerNumber playerNumber)
-    {
-        int index = (int)playerNumber;
-        if (_players[index] == null)
+        internal BalloonSpawner(
+            Transform parent,
+            BalloonFightRuntime game,
+            BalloonGameConfig config,
+            BalloonPrefabConfig prefabs)
         {
-            _players[index] = FighterFactory.CreatePlayer(_parent, _config, _prefabs, playerNumber);
+            _parent = parent;
+            _game = game;
+            _config = config;
+            _prefabs = prefabs;
+            _enemyPool = new BalloonEnemyPool(parent, config, prefabs);
         }
 
-        BalloonPlayer player = _players[index];
-        player.gameObject.SetActive(true);
-        player.transform.position = _config.GetPlayerSpawn(playerNumber);
-        player.InitializePlayer(_game, _config, playerNumber);
-        return player;
-    }
-
-    internal void SpawnPhase(int phase)
-    {
-        int enemyCount = Mathf.Min(phase + _config.PhaseEnemyOffset, _config.EnemySpawns.Length);
-        for (int index = 0; index < enemyCount; index++)
+        internal void SpawnAllPlayers()
         {
-            BalloonEnemy enemy = _enemyPool.Get(_config.EnemySpawns[index]);
-            enemy.Initialize(_game, _config, _config.EnemyBalloonCount);
-            _enemies.Add(enemy);
+            SpawnPlayer(PlayerNumber.One);
+            SpawnPlayer(PlayerNumber.Two);
         }
-    }
 
-    internal bool RemoveEnemy(BalloonEnemy enemy)
-    {
-        return enemy != null && _enemies.Remove(enemy);
-    }
-
-    internal BalloonPlayer GetNearestPlayer(Vector3 position)
-    {
-        BalloonPlayer nearest = null;
-        float nearestDistance = float.MaxValue;
-        foreach (BalloonPlayer player in _players)
+        internal BalloonPlayer SpawnPlayer(PlayerNumber playerNumber)
         {
-            if (player == null || !player.IsAvailable)
+            int index = (int)playerNumber;
+            if (_players[index] == null)
             {
-                continue;
+                _players[index] = FighterFactory.CreatePlayer(_parent, _config, _prefabs, playerNumber);
             }
 
-            float distance = (player.transform.position - position).sqrMagnitude;
-            if (distance < nearestDistance)
+            BalloonPlayer player = _players[index];
+            player.gameObject.SetActive(true);
+            player.transform.position = _config.GetPlayerSpawn(playerNumber);
+            player.InitializePlayer(_game, _config, playerNumber);
+            return player;
+        }
+
+        internal void SpawnPhase(int phase)
+        {
+            int enemyCount = Mathf.Min(phase + _config.PhaseEnemyOffset, _config.EnemySpawns.Length);
+            for (int index = 0; index < enemyCount; index++)
             {
-                nearest = player;
-                nearestDistance = distance;
+                BalloonEnemy enemy = _enemyPool.Get(_config.EnemySpawns[index]);
+                enemy.Initialize(_game, _config, _config.EnemyBalloonCount);
+                _enemies.Add(enemy);
             }
         }
 
-        return nearest;
-    }
-
-    internal void Reset()
-    {
-        foreach (BalloonPlayer player in _players)
+        internal bool RemoveEnemy(BalloonEnemy enemy)
         {
-            player?.gameObject.SetActive(false);
+            return enemy != null && _enemies.Remove(enemy);
         }
 
-        _enemyPool.ReleaseAll(_enemies);
-        _enemies.Clear();
-    }
+        internal BalloonPlayer GetNearestPlayer(Vector3 position)
+        {
+            BalloonPlayer nearest = null;
+            float nearestDistance = float.MaxValue;
+            foreach (BalloonPlayer player in _players)
+            {
+                if (player == null || !player.IsAvailable)
+                {
+                    continue;
+                }
 
-    internal void Clear()
-    {
-        _enemyPool.Clear();
+                float distance = (player.transform.position - position).sqrMagnitude;
+                if (distance < nearestDistance)
+                {
+                    nearest = player;
+                    nearestDistance = distance;
+                }
+            }
+
+            return nearest;
+        }
+
+        internal void Reset()
+        {
+            foreach (BalloonPlayer player in _players)
+            {
+                player?.gameObject.SetActive(false);
+            }
+
+            _enemyPool.ReleaseAll(_enemies);
+            _enemies.Clear();
+        }
+
+        internal void Clear()
+        {
+            _enemyPool.Clear();
+        }
     }
 }

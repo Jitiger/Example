@@ -6,177 +6,178 @@ using BalloonFight.Visual;
 using UnityEditor;
 using UnityEngine;
 
-namespace BalloonFight.Editor;
-
-internal static class BalloonPrefabBuilder
+namespace BalloonFight.Editor
 {
-    private const string GeneratedFolder = "Assets/BalloonFight/Generated";
-    private const string ResourcesFolder = "Assets/Resources";
-    private const string PrefabsFolder = GeneratedFolder + "/Prefabs";
-    private const string SpritesFolder = GeneratedFolder + "/Sprites";
-
-    [MenuItem("Balloon Fight/Prepare Local Co-op")]
-    private static void Prepare()
+    internal static class BalloonPrefabBuilder
     {
-        if (EditorApplication.isPlayingOrWillChangePlaymode)
+        private const string GeneratedFolder = "Assets/BalloonFight/Generated";
+        private const string ResourcesFolder = "Assets/Resources";
+        private const string PrefabsFolder = GeneratedFolder + "/Prefabs";
+        private const string SpritesFolder = GeneratedFolder + "/Sprites";
+
+        [MenuItem("Balloon Fight/Prepare Local Co-op")]
+        private static void Prepare()
         {
-            Debug.LogWarning("Exit Play Mode before preparing assets.");
-            return;
-        }
-
-        EnsureFolder(ResourcesFolder);
-        EnsureFolder(PrefabsFolder);
-        EnsureFolder(SpritesFolder);
-        BalloonGameConfig game = GetOrCreate<BalloonGameConfig>();
-        BalloonVisualConfig visual = GetOrCreate<BalloonVisualConfig>();
-        GetOrCreate<BalloonUiConfig>();
-        GetOrCreate<BalloonInputConfig>();
-        GetOrCreate<BalloonFeedbackConfig>();
-        BalloonPrefabConfig prefabs = GetOrCreate<BalloonPrefabConfig>();
-        RetroFactory.Configure(visual);
-
-        GameObject root = new(nameof(BalloonPrefabBuilder));
-        root.SetActive(false);
-        try
-        {
-            GameObject[] players = new GameObject[PlayerRoster.Count];
-            for (int index = 0; index < players.Length; index++)
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
             {
-                string assetName = $"Player{index + 1}";
-                players[index] = LoadPrefab(assetName);
-                if (players[index] == null)
+                Debug.LogWarning("Exit Play Mode before preparing assets.");
+                return;
+            }
+
+            EnsureFolder(ResourcesFolder);
+            EnsureFolder(PrefabsFolder);
+            EnsureFolder(SpritesFolder);
+            BalloonGameConfig game = GetOrCreate<BalloonGameConfig>();
+            BalloonVisualConfig visual = GetOrCreate<BalloonVisualConfig>();
+            GetOrCreate<BalloonUiConfig>();
+            GetOrCreate<BalloonInputConfig>();
+            GetOrCreate<BalloonFeedbackConfig>();
+            BalloonPrefabConfig prefabs = GetOrCreate<BalloonPrefabConfig>();
+            RetroFactory.Configure(visual);
+
+            GameObject root = new(nameof(BalloonPrefabBuilder));
+            root.SetActive(false);
+            try
+            {
+                GameObject[] players = new GameObject[PlayerRoster.Count];
+                for (int index = 0; index < players.Length; index++)
                 {
-                    players[index] = Save(
-                        FighterFactory.CreatePlayerPrefabObject(root.transform, game, (PlayerNumber)index),
-                        assetName);
+                    string assetName = $"Player{index + 1}";
+                    players[index] = LoadPrefab(assetName);
+                    if (players[index] == null)
+                    {
+                        players[index] = Save(
+                            FighterFactory.CreatePlayerPrefabObject(root.transform, game, (PlayerNumber)index),
+                            assetName);
+                    }
                 }
-            }
 
-            GameObject[] enemies = new GameObject[2];
-            for (int index = 0; index < enemies.Length; index++)
-            {
-                string assetName = $"Enemy{index}";
-                enemies[index] = LoadPrefab(assetName);
-                if (enemies[index] == null)
-                {
-                    enemies[index] = Save(
-                        FighterFactory.CreateEnemyPrefabObject(root.transform, game, index),
-                        assetName);
-                }
-            }
-
-            GameObject stage = LoadPrefab("Stage");
-            if (stage == null)
-            {
-                GameObject stageRoot = new("StagePrefab");
-                stageRoot.transform.SetParent(root.transform, false);
-                BalloonStageBuilder.Build(stageRoot.transform, game, visual);
-                stage = Save(stageRoot, "Stage");
-            }
-
-            SerializedObject serialized = new(prefabs);
-            AssignIfEmpty(serialized.FindProperty("_stage"), stage);
-            SerializedProperty playerArray = serialized.FindProperty("_players");
-            if (playerArray.arraySize < players.Length)
-            {
-                playerArray.arraySize = players.Length;
-            }
-            for (int index = 0; index < players.Length; index++)
-            {
-                AssignIfEmpty(playerArray.GetArrayElementAtIndex(index), players[index]);
-            }
-            SerializedProperty enemyArray = serialized.FindProperty("_enemies");
-            if (enemyArray.arraySize == 0)
-            {
-                enemyArray.arraySize = enemies.Length;
+                GameObject[] enemies = new GameObject[2];
                 for (int index = 0; index < enemies.Length; index++)
                 {
-                    enemyArray.GetArrayElementAtIndex(index).objectReferenceValue = enemies[index];
+                    string assetName = $"Enemy{index}";
+                    enemies[index] = LoadPrefab(assetName);
+                    if (enemies[index] == null)
+                    {
+                        enemies[index] = Save(
+                            FighterFactory.CreateEnemyPrefabObject(root.transform, game, index),
+                            assetName);
+                    }
                 }
-            }
-            serialized.ApplyModifiedPropertiesWithoutUndo();
-            AssetDatabase.SaveAssets();
-            Selection.activeObject = prefabs;
-            Debug.Log("Local co-op assets prepared. Existing assets and references were preserved.");
-        }
-        finally
-        {
-            Object.DestroyImmediate(root);
-        }
-    }
 
-    private static void AssignIfEmpty(SerializedProperty property, Object value)
-    {
-        if (property.objectReferenceValue == null)
-        {
-            property.objectReferenceValue = value;
-        }
-    }
-
-    private static GameObject LoadPrefab(string assetName)
-    {
-        return AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabsFolder}/{assetName}.prefab");
-    }
-
-    private static GameObject Save(GameObject instance, string assetName)
-    {
-        Dictionary<Sprite, Sprite> saved = new();
-        int index = 0;
-        foreach (SpriteRenderer renderer in instance.GetComponentsInChildren<SpriteRenderer>(true))
-        {
-            Sprite sprite = renderer.sprite;
-            if (sprite == null || AssetDatabase.Contains(sprite))
-            {
-                continue;
-            }
-
-            if (!saved.TryGetValue(sprite, out Sprite persistent))
-            {
-                string path = $"{SpritesFolder}/{assetName}_{index++}.asset";
-                persistent = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                if (persistent == null)
+                GameObject stage = LoadPrefab("Stage");
+                if (stage == null)
                 {
-                    Texture2D texture = Object.Instantiate(sprite.texture);
-                    Vector2 pivot = new(sprite.pivot.x / sprite.rect.width, sprite.pivot.y / sprite.rect.height);
-                    persistent = Sprite.Create(texture, sprite.rect, pivot, sprite.pixelsPerUnit);
-                    persistent.name = renderer.gameObject.name;
-                    AssetDatabase.CreateAsset(persistent, path);
-                    AssetDatabase.AddObjectToAsset(texture, persistent);
+                    GameObject stageRoot = new("StagePrefab");
+                    stageRoot.transform.SetParent(root.transform, false);
+                    BalloonStageBuilder.Build(stageRoot.transform, game, visual);
+                    stage = Save(stageRoot, "Stage");
                 }
-                saved.Add(sprite, persistent);
+
+                SerializedObject serialized = new(prefabs);
+                AssignIfEmpty(serialized.FindProperty("_stage"), stage);
+                SerializedProperty playerArray = serialized.FindProperty("_players");
+                if (playerArray.arraySize < players.Length)
+                {
+                    playerArray.arraySize = players.Length;
+                }
+                for (int index = 0; index < players.Length; index++)
+                {
+                    AssignIfEmpty(playerArray.GetArrayElementAtIndex(index), players[index]);
+                }
+                SerializedProperty enemyArray = serialized.FindProperty("_enemies");
+                if (enemyArray.arraySize == 0)
+                {
+                    enemyArray.arraySize = enemies.Length;
+                    for (int index = 0; index < enemies.Length; index++)
+                    {
+                        enemyArray.GetArrayElementAtIndex(index).objectReferenceValue = enemies[index];
+                    }
+                }
+                serialized.ApplyModifiedPropertiesWithoutUndo();
+                AssetDatabase.SaveAssets();
+                Selection.activeObject = prefabs;
+                Debug.Log("Local co-op assets prepared. Existing assets and references were preserved.");
             }
-            renderer.sprite = persistent;
+            finally
+            {
+                Object.DestroyImmediate(root);
+            }
         }
 
-        instance.SetActive(true);
-        GameObject result = PrefabUtility.SaveAsPrefabAsset(instance, $"{PrefabsFolder}/{assetName}.prefab");
-        if (result == null)
+        private static void AssignIfEmpty(SerializedProperty property, Object value)
         {
-            throw new System.InvalidOperationException($"Could not save {assetName} prefab.");
+            if (property.objectReferenceValue == null)
+            {
+                property.objectReferenceValue = value;
+            }
         }
-        return result;
-    }
 
-    private static T GetOrCreate<T>() where T : ScriptableObject
-    {
-        string path = $"{ResourcesFolder}/{typeof(T).Name}.asset";
-        T asset = AssetDatabase.LoadAssetAtPath<T>(path);
-        if (asset == null)
+        private static GameObject LoadPrefab(string assetName)
         {
-            asset = ScriptableObject.CreateInstance<T>();
-            AssetDatabase.CreateAsset(asset, path);
+            return AssetDatabase.LoadAssetAtPath<GameObject>($"{PrefabsFolder}/{assetName}.prefab");
         }
-        return asset;
-    }
 
-    private static void EnsureFolder(string path)
-    {
-        if (AssetDatabase.IsValidFolder(path))
+        private static GameObject Save(GameObject instance, string assetName)
         {
-            return;
+            Dictionary<Sprite, Sprite> saved = new();
+            int index = 0;
+            foreach (SpriteRenderer renderer in instance.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                Sprite sprite = renderer.sprite;
+                if (sprite == null || AssetDatabase.Contains(sprite))
+                {
+                    continue;
+                }
+
+                if (!saved.TryGetValue(sprite, out Sprite persistent))
+                {
+                    string path = $"{SpritesFolder}/{assetName}_{index++}.asset";
+                    persistent = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                    if (persistent == null)
+                    {
+                        Texture2D texture = Object.Instantiate(sprite.texture);
+                        Vector2 pivot = new(sprite.pivot.x / sprite.rect.width, sprite.pivot.y / sprite.rect.height);
+                        persistent = Sprite.Create(texture, sprite.rect, pivot, sprite.pixelsPerUnit);
+                        persistent.name = renderer.gameObject.name;
+                        AssetDatabase.CreateAsset(persistent, path);
+                        AssetDatabase.AddObjectToAsset(texture, persistent);
+                    }
+                    saved.Add(sprite, persistent);
+                }
+                renderer.sprite = persistent;
+            }
+
+            instance.SetActive(true);
+            GameObject result = PrefabUtility.SaveAsPrefabAsset(instance, $"{PrefabsFolder}/{assetName}.prefab");
+            if (result == null)
+            {
+                throw new System.InvalidOperationException($"Could not save {assetName} prefab.");
+            }
+            return result;
         }
-        string parent = System.IO.Path.GetDirectoryName(path).Replace('\\', '/');
-        EnsureFolder(parent);
-        AssetDatabase.CreateFolder(parent, System.IO.Path.GetFileName(path));
+
+        private static T GetOrCreate<T>() where T : ScriptableObject
+        {
+            string path = $"{ResourcesFolder}/{typeof(T).Name}.asset";
+            T asset = AssetDatabase.LoadAssetAtPath<T>(path);
+            if (asset == null)
+            {
+                asset = ScriptableObject.CreateInstance<T>();
+                AssetDatabase.CreateAsset(asset, path);
+            }
+            return asset;
+        }
+
+        private static void EnsureFolder(string path)
+        {
+            if (AssetDatabase.IsValidFolder(path))
+            {
+                return;
+            }
+            string parent = System.IO.Path.GetDirectoryName(path).Replace('\\', '/');
+            EnsureFolder(parent);
+            AssetDatabase.CreateFolder(parent, System.IO.Path.GetFileName(path));
+        }
     }
 }

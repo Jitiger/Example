@@ -1,27 +1,28 @@
 using UnityEngine;
 
-namespace BalloonFight.Actors;
-
-internal sealed class BalloonTarget : MonoBehaviour
+namespace BalloonFight.Actors
 {
-    private BalloonActor _owner;
-
-    internal BalloonActor Owner => _owner;
-
-    internal void SetOwner(BalloonActor owner)
+    internal sealed class BalloonTarget : MonoBehaviour
     {
-        _owner = owner;
-    }
+        private BalloonActor _owner;
 
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        BalloonBody attackingBody = other.GetComponent<BalloonBody>();
-        if (_owner == null || attackingBody == null || attackingBody.Owner == null
-            || attackingBody.Owner == _owner || !_owner.CanReceiveHitFrom(attackingBody.Owner))
+        internal BalloonActor Owner => _owner;
+
+        internal void SetOwner(BalloonActor owner)
         {
-            return;
+            _owner = owner;
         }
 
-        _owner.PopBalloon(this);
+        private void OnTriggerEnter2D(Collider2D other)
+        {
+            BalloonBody attackingBody = other.GetComponent<BalloonBody>();
+            if (_owner == null || attackingBody == null || attackingBody.Owner == null
+                || attackingBody.Owner == _owner || !_owner.CanReceiveHitFrom(attackingBody.Owner))
+            {
+                return;
+            }
+
+            _owner.PopBalloon(this);
+        }
     }
 }

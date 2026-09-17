@@ -1,15 +1,16 @@
 using UnityEngine;
 
-namespace BalloonFight.Actors;
-
-internal sealed class BalloonBody : MonoBehaviour
+namespace BalloonFight.Actors
 {
-    private BalloonActor _owner;
-
-    internal BalloonActor Owner => _owner;
-
-    internal void SetOwner(BalloonActor owner)
+    internal sealed class BalloonBody : MonoBehaviour
     {
-        _owner = owner;
+        private BalloonActor _owner;
+
+        internal BalloonActor Owner => _owner;
+
+        internal void SetOwner(BalloonActor owner)
+        {
+            _owner = owner;
+        }
     }
 }
