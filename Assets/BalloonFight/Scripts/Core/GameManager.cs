@@ -13,8 +13,7 @@ public sealed class GameManager : MonoBehaviour
     [SerializeField] private float _respawnInvincibility = 1.4f;
 
     [Header("카메라와 스폰")]
-    [SerializeField] private float _cameraSize = 5.5f;
-    [SerializeField] private float _cameraDepth = -10f;
+    [SerializeField] private Camera _gameCamera;
     [SerializeField] private int _phaseEnemyOffset = 2;
     [SerializeField] private int _enemyPoolCapacity = 5;
     [SerializeField] private Vector2[] _playerSpawns = { new(-1f, -3.35f), new(1f, -3.35f) };
@@ -65,8 +64,19 @@ public sealed class GameManager : MonoBehaviour
     private void Start()
     {
         Application.targetFrameRate = _targetFrameRate;
-        Camera gameCamera = GetOrCreateCamera();
-        _mapBoundary.SetCamera(gameCamera);
+        if (_gameCamera == null)
+        {
+            _gameCamera = Camera.main;
+        }
+
+        if (_gameCamera == null)
+        {
+            Debug.LogError("GameManager에 Main Camera를 연결해주세요.", this);
+            enabled = false;
+            return;
+        }
+
+        _mapBoundary.SetCamera(_gameCamera);
         BuildStage();
         _spawner = new FighterSpawner(transform, this, _playerPrefabs, _enemyPrefabs);
         _popPool = new BalloonPopPool(transform, GetOrAddComponent<BalloonPopEffect>(), RetroFactory.GetSquare());
@@ -84,6 +94,11 @@ public sealed class GameManager : MonoBehaviour
 
     private void OnGUI()
     {
+        if (_spawner == null)
+        {
+            return;
+        }
+
         _hud?.Draw(_gameStateManager.Score, _gameStateManager.Phase,
             _gameStateManager.GetLives(PlayerNumber.One), _gameStateManager.GetLives(PlayerNumber.Two),
             _spawner.ActiveEnemyCount, _gameStateManager.IsChangingPhase,
@@ -123,24 +138,6 @@ public sealed class GameManager : MonoBehaviour
     {
         T component = GetComponent<T>();
         return component != null ? component : gameObject.AddComponent<T>();
-    }
-
-    private Camera GetOrCreateCamera()
-    {
-        Camera gameCamera = Camera.main;
-        if (gameCamera == null)
-        {
-            GameObject cameraObject = new("Balloon Fight Camera");
-            cameraObject.transform.SetParent(transform);
-            cameraObject.tag = "MainCamera";
-            gameCamera = cameraObject.AddComponent<Camera>();
-        }
-
-        gameCamera.orthographic = true;
-        gameCamera.orthographicSize = _cameraSize;
-        gameCamera.transform.position = new Vector3(0f, 0f, _cameraDepth);
-        gameCamera.clearFlags = CameraClearFlags.SolidColor;
-        return gameCamera;
     }
 
     private void BuildStage()
