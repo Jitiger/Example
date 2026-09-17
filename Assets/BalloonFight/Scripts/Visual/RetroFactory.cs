@@ -92,8 +92,8 @@ public sealed class RetroFactory : MonoBehaviour
         _enemyB = null;
         _redBalloon = null;
         _yellowBalloon = null;
-        _playerTwoBalloonA = null;
-        _playerTwoBalloonB = null;
+        _playerTwoBalloonASpriteCache = null;
+        _playerTwoBalloonBSpriteCache = null;
         _pinkBalloon = null;
     }
 
@@ -104,8 +104,8 @@ public sealed class RetroFactory : MonoBehaviour
     private static Sprite _enemyB;
     private static Sprite _redBalloon;
     private static Sprite _yellowBalloon;
-    private static Sprite _playerTwoBalloonA;
-    private static Sprite _playerTwoBalloonB;
+    private static Sprite _playerTwoBalloonASpriteCache;
+    private static Sprite _playerTwoBalloonBSpriteCache;
     private static Sprite _pinkBalloon;
 
     internal static GameObject CreateBlock(
@@ -211,11 +211,11 @@ public sealed class RetroFactory : MonoBehaviour
         if (balloonIndex == 0)
         {
             if (_config.PlayerTwoBalloonASprite != null) return _config.PlayerTwoBalloonASprite;
-            return _playerTwoBalloonA ??= CreateBalloonSprite(_config.PlayerTwoBalloonA);
+            return _playerTwoBalloonASpriteCache ??= CreateBalloonSprite(_config.PlayerTwoBalloonA);
         }
 
         if (_config.PlayerTwoBalloonBSprite != null) return _config.PlayerTwoBalloonBSprite;
-        return _playerTwoBalloonB ??= CreateBalloonSprite(_config.PlayerTwoBalloonB);
+        return _playerTwoBalloonBSpriteCache ??= CreateBalloonSprite(_config.PlayerTwoBalloonB);
     }
 
     private static Sprite GetEnemySprite(int variation)
