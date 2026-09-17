@@ -4,13 +4,13 @@ using UnityEngine.InputSystem;
 
 namespace BalloonFight.Input
 {
-    internal sealed class BalloonInputReader
+    internal sealed class PlayerInput
     {
         private readonly BalloonInputConfig _config;
 
         internal bool RestartPressed => IsPressed(_config.Restart);
 
-        internal BalloonInputReader(BalloonInputConfig config)
+        internal PlayerInput(BalloonInputConfig config)
         {
             _config = config;
         }

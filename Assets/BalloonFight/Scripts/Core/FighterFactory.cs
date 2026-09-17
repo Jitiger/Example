@@ -20,7 +20,7 @@ namespace BalloonFight.Core
             return CreateEnemy(parent, config, null, variation).gameObject;
         }
 
-        internal static BalloonPlayer CreatePlayer(
+        internal static PlayerController CreatePlayer(
             Transform parent,
             BalloonGameConfig config,
             BalloonPrefabConfig prefabs,
@@ -30,8 +30,8 @@ namespace BalloonFight.Core
             if (prefab != null)
             {
                 GameObject instance = Object.Instantiate(prefab, parent);
-                BalloonPlayer actor = instance.GetComponent<BalloonPlayer>();
-                instance.GetComponent<BalloonBody>().SetOwner(actor);
+                PlayerController actor = instance.GetComponent<PlayerController>();
+                instance.GetComponent<FighterBody>().SetOwner(actor);
                 return actor;
             }
 
@@ -44,12 +44,12 @@ namespace BalloonFight.Core
                 config);
             RetroFactory.CreateFighter(fighter.transform, true, config.PlayerBalloonCount, variation);
 
-            BalloonPlayer player = fighter.AddComponent<BalloonPlayer>();
-            fighter.GetComponent<BalloonBody>().SetOwner(player);
+            PlayerController player = fighter.AddComponent<PlayerController>();
+            fighter.GetComponent<FighterBody>().SetOwner(player);
             return player;
         }
 
-        internal static BalloonEnemy CreateEnemy(
+        internal static EnemyController CreateEnemy(
             Transform parent,
             BalloonGameConfig config,
             BalloonPrefabConfig prefabs,
@@ -59,16 +59,16 @@ namespace BalloonFight.Core
             if (prefab != null)
             {
                 GameObject instance = Object.Instantiate(prefab, parent);
-                BalloonEnemy actor = instance.GetComponent<BalloonEnemy>();
-                instance.GetComponent<BalloonBody>().SetOwner(actor);
+                EnemyController actor = instance.GetComponent<EnemyController>();
+                instance.GetComponent<FighterBody>().SetOwner(actor);
                 return actor;
             }
 
             GameObject fighter = CreateBody(parent, $"Enemy {variation + 1}", Vector2.zero, config.EnemyGravity, config);
             RetroFactory.CreateFighter(fighter.transform, false, config.EnemyBalloonCount, variation);
 
-            BalloonEnemy enemy = fighter.AddComponent<BalloonEnemy>();
-            fighter.GetComponent<BalloonBody>().SetOwner(enemy);
+            EnemyController enemy = fighter.AddComponent<EnemyController>();
+            fighter.GetComponent<FighterBody>().SetOwner(enemy);
             return enemy;
         }
 
@@ -92,7 +92,7 @@ namespace BalloonFight.Core
             CapsuleCollider2D collider = fighter.AddComponent<CapsuleCollider2D>();
             collider.size = config.BodySize;
             collider.offset = config.BodyOffset;
-            fighter.AddComponent<BalloonBody>();
+            fighter.AddComponent<FighterBody>();
             return fighter;
         }
     }

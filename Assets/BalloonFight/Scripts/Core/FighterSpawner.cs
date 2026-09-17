@@ -6,21 +6,21 @@ using UnityEngine;
 
 namespace BalloonFight.Core
 {
-    internal sealed class BalloonSpawner
+    internal sealed class FighterSpawner
     {
-        private readonly BalloonFightRuntime _game;
+        private readonly GameManager _game;
         private readonly BalloonGameConfig _config;
         private readonly BalloonPrefabConfig _prefabs;
         private readonly Transform _parent;
         private readonly BalloonEnemyPool _enemyPool;
-        private readonly List<BalloonEnemy> _enemies = new();
-        private readonly BalloonPlayer[] _players = new BalloonPlayer[PlayerRoster.Count];
+        private readonly List<EnemyController> _enemies = new();
+        private readonly PlayerController[] _players = new PlayerController[PlayerRoster.Count];
 
         internal int ActiveEnemyCount => _enemies.Count;
 
-        internal BalloonSpawner(
+        internal FighterSpawner(
             Transform parent,
-            BalloonFightRuntime game,
+            GameManager game,
             BalloonGameConfig config,
             BalloonPrefabConfig prefabs)
         {
@@ -37,7 +37,7 @@ namespace BalloonFight.Core
             SpawnPlayer(PlayerNumber.Two);
         }
 
-        internal BalloonPlayer SpawnPlayer(PlayerNumber playerNumber)
+        internal PlayerController SpawnPlayer(PlayerNumber playerNumber)
         {
             int index = (int)playerNumber;
             if (_players[index] == null)
@@ -45,7 +45,7 @@ namespace BalloonFight.Core
                 _players[index] = FighterFactory.CreatePlayer(_parent, _config, _prefabs, playerNumber);
             }
 
-            BalloonPlayer player = _players[index];
+            PlayerController player = _players[index];
             player.gameObject.SetActive(true);
             player.transform.position = _config.GetPlayerSpawn(playerNumber);
             player.InitializePlayer(_game, _config, playerNumber);
@@ -57,22 +57,22 @@ namespace BalloonFight.Core
             int enemyCount = Mathf.Min(phase + _config.PhaseEnemyOffset, _config.EnemySpawns.Length);
             for (int index = 0; index < enemyCount; index++)
             {
-                BalloonEnemy enemy = _enemyPool.Get(_config.EnemySpawns[index]);
+                EnemyController enemy = _enemyPool.Get(_config.EnemySpawns[index]);
                 enemy.Initialize(_game, _config, _config.EnemyBalloonCount);
                 _enemies.Add(enemy);
             }
         }
 
-        internal bool RemoveEnemy(BalloonEnemy enemy)
+        internal bool RemoveEnemy(EnemyController enemy)
         {
             return enemy != null && _enemies.Remove(enemy);
         }
 
-        internal BalloonPlayer GetNearestPlayer(Vector3 position)
+        internal PlayerController GetNearestPlayer(Vector3 position)
         {
-            BalloonPlayer nearest = null;
+            PlayerController nearest = null;
             float nearestDistance = float.MaxValue;
-            foreach (BalloonPlayer player in _players)
+            foreach (PlayerController player in _players)
             {
                 if (player == null || !player.IsAvailable)
                 {
@@ -92,7 +92,7 @@ namespace BalloonFight.Core
 
         internal void Reset()
         {
-            foreach (BalloonPlayer player in _players)
+            foreach (PlayerController player in _players)
             {
                 player?.gameObject.SetActive(false);
             }

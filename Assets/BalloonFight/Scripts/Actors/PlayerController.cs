@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace BalloonFight.Actors
 {
-    internal sealed class BalloonPlayer : BalloonActor
+    internal sealed class PlayerController : Fighter
     {
         private bool _isGrounded;
         private Transform _visual;
@@ -14,13 +14,13 @@ namespace BalloonFight.Actors
         internal PlayerNumber PlayerNumber => _playerNumber;
         internal bool IsAvailable => gameObject.activeSelf && !IsDead;
 
-        internal void InitializePlayer(BalloonFightRuntime game, BalloonGameConfig config, PlayerNumber playerNumber)
+        internal void InitializePlayer(GameManager game, BalloonGameConfig config, PlayerNumber playerNumber)
         {
             _playerNumber = playerNumber;
             Initialize(game, config, config.PlayerBalloonCount);
         }
 
-        internal override void Initialize(BalloonFightRuntime game, BalloonGameConfig config, int balloonCount)
+        internal override void Initialize(GameManager game, BalloonGameConfig config, int balloonCount)
         {
             base.Initialize(game, config, balloonCount);
             _visual = transform.Find("Visual");

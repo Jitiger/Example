@@ -2,20 +2,20 @@ using UnityEngine;
 
 namespace BalloonFight.Actors
 {
-    internal sealed class BalloonTarget : MonoBehaviour
+    internal sealed class BalloonHitTarget : MonoBehaviour
     {
-        private BalloonActor _owner;
+        private Fighter _owner;
 
-        internal BalloonActor Owner => _owner;
+        internal Fighter Owner => _owner;
 
-        internal void SetOwner(BalloonActor owner)
+        internal void SetOwner(Fighter owner)
         {
             _owner = owner;
         }
 
         private void OnTriggerEnter2D(Collider2D other)
         {
-            BalloonBody attackingBody = other.GetComponent<BalloonBody>();
+            FighterBody attackingBody = other.GetComponent<FighterBody>();
             if (_owner == null || attackingBody == null || attackingBody.Owner == null
                 || attackingBody.Owner == _owner)
             {

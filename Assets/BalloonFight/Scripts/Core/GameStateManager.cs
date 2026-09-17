@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace BalloonFight.Core
 {
-    internal sealed class BalloonGameManager
+    internal sealed class GameStateManager
     {
         private readonly BalloonGameConfig _config;
         private readonly int[] _lives = new int[PlayerRoster.Count];
@@ -21,7 +21,7 @@ namespace BalloonFight.Core
         internal bool IsChangingPhase => _isChangingPhase;
         internal bool IsPlaying => !_isGameOver && !_isAllClear;
 
-        internal BalloonGameManager(BalloonGameConfig config)
+        internal GameStateManager(BalloonGameConfig config)
         {
             _config = config;
             Reset();

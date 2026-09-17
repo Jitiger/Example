@@ -5,32 +5,32 @@ using UnityEngine;
 
 namespace BalloonFight.Actors
 {
-    internal abstract class BalloonActor : MonoBehaviour
+    internal abstract class Fighter : MonoBehaviour
     {
-        private readonly List<BalloonTarget> _balloons = new();
+        private readonly List<BalloonHitTarget> _balloons = new();
         private float _invincibleUntil;
         private int _balloonCount;
         private bool _isDead;
-        private BalloonFightRuntime _game;
+        private GameManager _game;
         private BalloonGameConfig _config;
         private Rigidbody2D _body;
         private Collider2D _bodyCollider;
 
-        protected BalloonFightRuntime Game => _game;
+        protected GameManager Game => _game;
         protected BalloonGameConfig Config => _config;
         protected Rigidbody2D Body => _body;
         protected Collider2D BodyCollider => _bodyCollider;
         protected int BalloonCount => _balloonCount;
         protected bool IsDead => _isDead;
 
-        internal virtual void Initialize(BalloonFightRuntime game, BalloonGameConfig config, int balloonCount)
+        internal virtual void Initialize(GameManager game, BalloonGameConfig config, int balloonCount)
         {
             StopAllCoroutines();
             _game = game;
             _config = config;
             _body = GetComponent<Rigidbody2D>();
             _bodyCollider = GetComponent<Collider2D>();
-            GetComponent<BalloonBody>().SetOwner(this);
+            GetComponent<FighterBody>().SetOwner(this);
             CapsuleCollider2D capsule = _bodyCollider as CapsuleCollider2D;
             if (capsule != null)
             {
@@ -40,7 +40,7 @@ namespace BalloonFight.Actors
             _isDead = false;
             _invincibleUntil = 0f;
             _balloons.Clear();
-            _balloons.AddRange(GetComponentsInChildren<BalloonTarget>(true));
+            _balloons.AddRange(GetComponentsInChildren<BalloonHitTarget>(true));
             _balloonCount = Mathf.Min(balloonCount, _balloons.Count);
 
             _bodyCollider.enabled = true;
@@ -57,7 +57,7 @@ namespace BalloonFight.Actors
             }
         }
 
-        internal void PopBalloon(BalloonTarget target)
+        internal void PopBalloon(BalloonHitTarget target)
         {
             if (_isDead || target == null || Time.time < _invincibleUntil || !target.gameObject.activeSelf)
             {

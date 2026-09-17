@@ -3,12 +3,12 @@ using UnityEngine;
 
 namespace BalloonFight.Core
 {
-    internal sealed class BalloonWorldBounds
+    internal sealed class MapBoundary
     {
         private readonly Camera _camera;
         private readonly BalloonGameConfig _config;
 
-        internal BalloonWorldBounds(Camera gameCamera, BalloonGameConfig config)
+        internal MapBoundary(Camera gameCamera, BalloonGameConfig config)
         {
             _camera = gameCamera;
             _config = config;

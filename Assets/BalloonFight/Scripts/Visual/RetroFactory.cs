@@ -93,7 +93,7 @@ namespace BalloonFight.Visual
             collider.isTrigger = true;
             collider.radius = _config.BalloonRadius;
             collider.offset = _config.BalloonColliderOffset;
-            balloon.AddComponent<BalloonTarget>();
+            balloon.AddComponent<BalloonHitTarget>();
         }
 
         internal static Sprite GetSquare()

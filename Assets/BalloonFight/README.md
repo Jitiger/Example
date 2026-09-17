@@ -7,7 +7,7 @@ Unity 6에서 바로 실행되는 벌룬파이트 스타일 프로토타입입�
 1. 프로젝트를 Unity 6000.3.22f1로 엽니다.
 2. 기존 `Assets/Scenes/SampleScene.unity`를 열어도 됩니다.
 3. 별도 오브젝트나 프리팹을 만들 필요 없이 Play를 누릅니다.
-4. `BalloonFightRuntime`이 카메라, 발판, 플레이어 2명, 적, 풍선, HUD를 구성합니다.
+4. `GameManager`이 카메라, 발판, 플레이어 2명, 적, 풍선, HUD를 구성합니다.
 
 ## 코드 구조
 

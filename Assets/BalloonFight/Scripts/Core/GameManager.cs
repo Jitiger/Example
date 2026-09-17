@@ -11,7 +11,7 @@ using UnityEngine;
 
 namespace BalloonFight.Core
 {
-    internal sealed class BalloonFightRuntime : MonoBehaviour
+    internal sealed class GameManager : MonoBehaviour
     {
         private const string ConfigResourcePath = "BalloonGameConfig";
 
@@ -20,25 +20,25 @@ namespace BalloonFight.Core
 
         private readonly List<ScriptableObject> _ownedSettings = new();
         private BalloonFeedbackConfig _feedback;
-        private BalloonGameManager _gameManager;
+        private GameStateManager _gameStateManager;
         private BalloonHud _hud;
         private BalloonInputConfig _inputConfig;
-        private BalloonInputReader _input;
+        private PlayerInput _input;
         private BalloonPopPool _popPool;
-        private BalloonSpawner _spawner;
+        private FighterSpawner _spawner;
         private BalloonUiConfig _ui;
         private BalloonVisualConfig _visual;
-        private BalloonWorldBounds _worldBounds;
+        private MapBoundary _mapBoundary;
 
-        internal BalloonInputReader Input => _input;
-        internal bool IsPlaying => _gameManager.IsPlaying;
+        internal PlayerInput Input => _input;
+        internal bool IsPlaying => _gameStateManager.IsPlaying;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Boot()
         {
-            if (FindFirstObjectByType<BalloonFightRuntime>() == null)
+            if (FindFirstObjectByType<GameManager>() == null)
             {
-                new GameObject("Balloon Fight Runtime").AddComponent<BalloonFightRuntime>();
+                new GameObject("Game Manager").AddComponent<GameManager>();
             }
         }
 
@@ -50,8 +50,8 @@ namespace BalloonFight.Core
             _visual = LoadSettings<BalloonVisualConfig>();
             _ui = LoadSettings<BalloonUiConfig>();
             _feedback = LoadSettings<BalloonFeedbackConfig>();
-            _input = new BalloonInputReader(_inputConfig);
-            _gameManager = new BalloonGameManager(_config);
+            _input = new PlayerInput(_inputConfig);
+            _gameStateManager = new GameStateManager(_config);
             RetroFactory.Configure(_visual);
         }
 
@@ -59,18 +59,18 @@ namespace BalloonFight.Core
         {
             Application.targetFrameRate = _config.TargetFrameRate;
             Camera gameCamera = GetOrCreateCamera();
-            _worldBounds = new BalloonWorldBounds(gameCamera, _config);
+            _mapBoundary = new MapBoundary(gameCamera, _config);
             BuildStage();
-            _spawner = new BalloonSpawner(transform, this, _config, _prefabs);
+            _spawner = new FighterSpawner(transform, this, _config, _prefabs);
             _popPool = new BalloonPopPool(transform, _feedback, RetroFactory.GetSquare());
             _hud = new BalloonHud(_ui, _inputConfig);
             _spawner.SpawnAllPlayers();
-            _spawner.SpawnPhase(_gameManager.Phase);
+            _spawner.SpawnPhase(_gameStateManager.Phase);
         }
 
         private void Update()
         {
-            if (!_gameManager.IsPlaying && _input.RestartPressed)
+            if (!_gameStateManager.IsPlaying && _input.RestartPressed)
             {
                 Restart();
             }
@@ -79,14 +79,14 @@ namespace BalloonFight.Core
         private void OnGUI()
         {
             _hud?.Draw(
-                _gameManager.Score,
-                _gameManager.Phase,
-                _gameManager.GetLives(PlayerNumber.One),
-                _gameManager.GetLives(PlayerNumber.Two),
+                _gameStateManager.Score,
+                _gameStateManager.Phase,
+                _gameStateManager.GetLives(PlayerNumber.One),
+                _gameStateManager.GetLives(PlayerNumber.Two),
                 _spawner.ActiveEnemyCount,
-                _gameManager.IsChangingPhase,
-                _gameManager.IsGameOver,
-                _gameManager.IsAllClear);
+                _gameStateManager.IsChangingPhase,
+                _gameStateManager.IsGameOver,
+                _gameStateManager.IsAllClear);
         }
 
         private void OnDestroy()
@@ -104,32 +104,32 @@ namespace BalloonFight.Core
             _popPool?.Play(position);
         }
 
-        internal BalloonPlayer GetNearestPlayer(Vector3 position)
+        internal PlayerController GetNearestPlayer(Vector3 position)
         {
             return _spawner.GetNearestPlayer(position);
         }
 
-        internal void EnemyDefeated(BalloonEnemy enemy)
+        internal void EnemyDefeated(EnemyController enemy)
         {
             if (!_spawner.RemoveEnemy(enemy))
             {
                 return;
             }
 
-            if (_gameManager.RegisterEnemyDefeat(_spawner.ActiveEnemyCount))
+            if (_gameStateManager.RegisterEnemyDefeat(_spawner.ActiveEnemyCount))
             {
                 StartCoroutine(NextPhase());
             }
         }
 
-        internal void PlayerDefeated(BalloonPlayer player)
+        internal void PlayerDefeated(PlayerController player)
         {
-            if (player == null || !_gameManager.IsPlaying)
+            if (player == null || !_gameStateManager.IsPlaying)
             {
                 return;
             }
 
-            if (_gameManager.RegisterPlayerDefeat(player.PlayerNumber))
+            if (_gameStateManager.RegisterPlayerDefeat(player.PlayerNumber))
             {
                 StartCoroutine(RespawnPlayer(player.PlayerNumber));
             }
@@ -137,12 +137,12 @@ namespace BalloonFight.Core
 
         internal void Wrap(Transform target)
         {
-            _worldBounds.Wrap(target);
+            _mapBoundary.Wrap(target);
         }
 
         internal void ClampVertical(Transform target, Rigidbody2D body)
         {
-            _worldBounds.ClampVertical(target, body);
+            _mapBoundary.ClampVertical(target, body);
         }
 
         private T LoadSettings<T>(string resourcePath = null, T assigned = null) where T : ScriptableObject
@@ -191,20 +191,20 @@ namespace BalloonFight.Core
         private IEnumerator NextPhase()
         {
             yield return new WaitForSeconds(_config.PhaseDelay);
-            _gameManager.AdvancePhase();
-            _spawner.SpawnPhase(_gameManager.Phase);
-            _gameManager.CompletePhaseChange();
+            _gameStateManager.AdvancePhase();
+            _spawner.SpawnPhase(_gameStateManager.Phase);
+            _gameStateManager.CompletePhaseChange();
         }
 
         private IEnumerator RespawnPlayer(PlayerNumber playerNumber)
         {
             yield return new WaitForSeconds(_config.RespawnDelay);
-            if (!_gameManager.CanRespawn(playerNumber))
+            if (!_gameStateManager.CanRespawn(playerNumber))
             {
                 yield break;
             }
 
-            BalloonPlayer player = _spawner.SpawnPlayer(playerNumber);
+            PlayerController player = _spawner.SpawnPlayer(playerNumber);
             player.SetInvincible(_config.RespawnInvincibility);
         }
 
@@ -213,9 +213,9 @@ namespace BalloonFight.Core
             StopAllCoroutines();
             _popPool.Reset();
             _spawner.Reset();
-            _gameManager.Reset();
+            _gameStateManager.Reset();
             _spawner.SpawnAllPlayers();
-            _spawner.SpawnPhase(_gameManager.Phase);
+            _spawner.SpawnPhase(_gameStateManager.Phase);
         }
     }
 }

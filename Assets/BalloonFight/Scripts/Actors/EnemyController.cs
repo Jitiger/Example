@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace BalloonFight.Actors
 {
-    internal sealed class BalloonEnemy : BalloonActor, IPoolable
+    internal sealed class EnemyController : Fighter, IPoolable
     {
         private BalloonEnemyPool _pool;
         private float _moveDirection;
@@ -17,7 +17,7 @@ namespace BalloonFight.Actors
             _pool = pool;
         }
 
-        internal override void Initialize(BalloonFightRuntime game, BalloonGameConfig config, int balloonCount)
+        internal override void Initialize(GameManager game, BalloonGameConfig config, int balloonCount)
         {
             base.Initialize(game, config, balloonCount);
             Body.gravityScale = config.EnemyGravity;
@@ -84,7 +84,7 @@ namespace BalloonFight.Actors
 
         private void TryFlap()
         {
-            BalloonPlayer player = Game.GetNearestPlayer(transform.position);
+            PlayerController player = Game.GetNearestPlayer(transform.position);
             if (player == null || Time.time < _nextFlapTime)
             {
                 return;
@@ -101,7 +101,7 @@ namespace BalloonFight.Actors
 
         private void DecideDirection()
         {
-            BalloonPlayer player = Game == null ? null : Game.GetNearestPlayer(transform.position);
+            PlayerController player = Game == null ? null : Game.GetNearestPlayer(transform.position);
             if (player != null && Random.value < Config.EnemyTrackingChance)
             {
                 float delta = player.transform.position.x - transform.position.x;
