@@ -17,7 +17,7 @@ namespace BalloonFight.Actors
         {
             BalloonBody attackingBody = other.GetComponent<BalloonBody>();
             if (_owner == null || attackingBody == null || attackingBody.Owner == null
-                || attackingBody.Owner == _owner || !_owner.CanReceiveHitFrom(attackingBody.Owner))
+                || attackingBody.Owner == _owner)
             {
                 return;
             }

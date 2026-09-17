@@ -30,7 +30,6 @@ namespace BalloonFight.Config
         [SerializeField] private float _phaseDelay = 1.2f;
         [SerializeField] private float _respawnDelay = 1.1f;
         [SerializeField] private float _respawnInvincibility = 1.4f;
-        [SerializeField] private bool _friendlyFire;
 
         [Header("World")]
         [SerializeField] private Vector2 _bodySize = new(0.58f, 0.78f);
@@ -114,7 +113,6 @@ namespace BalloonFight.Config
         internal float PhaseDelay => _phaseDelay;
         internal float RespawnDelay => _respawnDelay;
         internal float RespawnInvincibility => _respawnInvincibility;
-        internal bool FriendlyFire => _friendlyFire;
         internal float CameraSize => _cameraSize;
         internal float CameraDepth => _cameraDepth;
         internal float TopLimit => _topLimit;

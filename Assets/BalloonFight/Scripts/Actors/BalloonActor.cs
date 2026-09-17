@@ -76,13 +76,6 @@ namespace BalloonFight.Actors
             _invincibleUntil = Mathf.Max(_invincibleUntil, Time.time + duration);
         }
 
-        internal bool CanReceiveHitFrom(BalloonActor attacker)
-        {
-            return Config.FriendlyFire
-                || this is not BalloonPlayer
-                || attacker is not BalloonPlayer;
-        }
-
         protected void MarkDead()
         {
             _isDead = true;
