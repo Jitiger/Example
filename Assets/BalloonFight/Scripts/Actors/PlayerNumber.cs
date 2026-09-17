@@ -1,13 +1,10 @@
-namespace BalloonFight.Actors
+public enum PlayerNumber
 {
-    public enum PlayerNumber
-    {
-        One,
-        Two
-    }
+    One,
+    Two
+}
 
-    public static class PlayerRoster
-    {
-        public const int Count = (int)PlayerNumber.Two + 1;
-    }
+public static class PlayerRoster
+{
+    public const int Count = (int)PlayerNumber.Two + 1;
 }

@@ -1,8 +1,5 @@
-namespace BalloonFight.Pooling
+public interface IPoolable
 {
-    public interface IPoolable
-    {
-        void OnSpawned();
-        void OnDespawned();
-    }
+    void OnSpawned();
+    void OnDespawned();
 }

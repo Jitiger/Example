@@ -1,51 +1,48 @@
 using BalloonFight.Config;
 using UnityEngine;
 
-namespace BalloonFight.Core
+internal sealed class MapBoundary
 {
-    internal sealed class MapBoundary
+    private readonly Camera _camera;
+    private readonly BalloonGameConfig _config;
+
+    internal MapBoundary(Camera gameCamera, BalloonGameConfig config)
     {
-        private readonly Camera _camera;
-        private readonly BalloonGameConfig _config;
+        _camera = gameCamera;
+        _config = config;
+    }
 
-        internal MapBoundary(Camera gameCamera, BalloonGameConfig config)
+    internal void Wrap(Transform target)
+    {
+        float edge = _camera.orthographicSize * _camera.aspect + _config.WrapPadding;
+        Vector3 position = target.position;
+        if (position.x > edge)
         {
-            _camera = gameCamera;
-            _config = config;
+            position.x = -edge;
+        }
+        else if (position.x < -edge)
+        {
+            position.x = edge;
         }
 
-        internal void Wrap(Transform target)
-        {
-            float edge = _camera.orthographicSize * _camera.aspect + _config.WrapPadding;
-            Vector3 position = target.position;
-            if (position.x > edge)
-            {
-                position.x = -edge;
-            }
-            else if (position.x < -edge)
-            {
-                position.x = edge;
-            }
+        target.position = position;
+    }
 
-            target.position = position;
+    internal void ClampVertical(Transform target, Rigidbody2D body)
+    {
+        if (target.position.y <= _config.TopLimit)
+        {
+            return;
         }
 
-        internal void ClampVertical(Transform target, Rigidbody2D body)
+        Vector3 position = target.position;
+        position.y = _config.TopLimit;
+        target.position = position;
+        Vector2 velocity = body.linearVelocity;
+        if (velocity.y > 0f)
         {
-            if (target.position.y <= _config.TopLimit)
-            {
-                return;
-            }
-
-            Vector3 position = target.position;
-            position.y = _config.TopLimit;
-            target.position = position;
-            Vector2 velocity = body.linearVelocity;
-            if (velocity.y > 0f)
-            {
-                velocity.y *= _config.CeilingBounce;
-                body.linearVelocity = velocity;
-            }
+            velocity.y *= _config.CeilingBounce;
+            body.linearVelocity = velocity;
         }
     }
 }

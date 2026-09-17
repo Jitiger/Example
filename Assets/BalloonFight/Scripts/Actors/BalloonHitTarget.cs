@@ -1,28 +1,25 @@
 using UnityEngine;
 
-namespace BalloonFight.Actors
+internal sealed class BalloonHitTarget : MonoBehaviour
 {
-    internal sealed class BalloonHitTarget : MonoBehaviour
+    private Fighter _owner;
+
+    internal Fighter Owner => _owner;
+
+    internal void SetOwner(Fighter owner)
     {
-        private Fighter _owner;
+        _owner = owner;
+    }
 
-        internal Fighter Owner => _owner;
-
-        internal void SetOwner(Fighter owner)
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        FighterBody attackingBody = other.GetComponent<FighterBody>();
+        if (_owner == null || attackingBody == null || attackingBody.Owner == null
+            || attackingBody.Owner == _owner)
         {
-            _owner = owner;
+            return;
         }
 
-        private void OnTriggerEnter2D(Collider2D other)
-        {
-            FighterBody attackingBody = other.GetComponent<FighterBody>();
-            if (_owner == null || attackingBody == null || attackingBody.Owner == null
-                || attackingBody.Owner == _owner)
-            {
-                return;
-            }
-
-            _owner.PopBalloon(this);
-        }
+        _owner.PopBalloon(this);
     }
 }
