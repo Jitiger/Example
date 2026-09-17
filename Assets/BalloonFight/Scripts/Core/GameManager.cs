@@ -25,12 +25,10 @@ public sealed class GameManager : MonoBehaviour
     [Header("선택 프리팹")]
     [SerializeField] private GameObject[] _playerPrefabs;
     [SerializeField] private GameObject[] _enemyPrefabs;
-    [SerializeField] private GameObject _stagePrefab;
 
     [Header("기능 컴포넌트")]
     [SerializeField] private PlayerInput _input;
     [SerializeField] private MapBoundary _mapBoundary;
-    [SerializeField] private BalloonStageBuilder _stageBuilder;
     [SerializeField] private BalloonHud _hud;
     [SerializeField] private BalloonPopEffect _popEffect;
     [SerializeField] private RetroFactory _retroFactory;
@@ -76,7 +74,6 @@ public sealed class GameManager : MonoBehaviour
         }
 
         _mapBoundary.SetCamera(_gameCamera);
-        BuildStage();
         _spawner = new FighterSpawner(transform, this, _playerPrefabs, _enemyPrefabs);
         _popPool = new BalloonPopPool(transform, _popEffect, RetroFactory.GetSquare());
         _spawner.SpawnAllPlayers();
@@ -135,25 +132,13 @@ public sealed class GameManager : MonoBehaviour
 
     private bool HasRequiredComponents()
     {
-        bool hasStage = _stagePrefab != null || _stageBuilder != null;
-        bool isReady = _input != null && _mapBoundary != null && hasStage && _hud != null && _popEffect != null && _retroFactory != null;
+        bool isReady = _input != null && _mapBoundary != null && _hud != null && _popEffect != null && _retroFactory != null;
         if (!isReady)
         {
             Debug.LogError("GameManager의 기능 컴포넌트 참조를 모두 연결해주세요.", this);
         }
 
         return isReady;
-    }
-
-    private void BuildStage()
-    {
-        if (_stagePrefab != null)
-        {
-            Instantiate(_stagePrefab, transform);
-            return;
-        }
-
-        _stageBuilder.Build(transform);
     }
 
     private IEnumerator NextPhase()
