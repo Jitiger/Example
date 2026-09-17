@@ -1,8 +1,8 @@
 using UnityEngine;
 
-internal static class BalloonStageBuilder
+public static class BalloonStageBuilder
 {
-    internal static void Build(Transform parent, BalloonGameConfig config, BalloonVisualConfig visual)
+    public static void Build(Transform parent, BalloonGameConfig config, BalloonVisualConfig visual)
     {
         Transform stage = new GameObject("Stage").transform;
         stage.SetParent(parent);

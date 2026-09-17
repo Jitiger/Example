@@ -3,12 +3,17 @@ using UnityEngine;
 [CreateAssetMenu(fileName = "BalloonPrefabConfig", menuName = "Balloon Fight/Prefabs")]
 public sealed class BalloonPrefabConfig : ScriptableObject
 {
-    [SerializeField] private GameObject _player;
+    [SerializeField] private GameObject[] _players;
     [SerializeField] private GameObject[] _enemies;
     [SerializeField] private GameObject _stage;
 
-    public GameObject Player => _player;
     public GameObject Stage => _stage;
+
+    public GameObject GetPlayer(PlayerNumber player)
+    {
+        int index = (int)player;
+        return _players == null || index >= _players.Length ? null : _players[index];
+    }
 
     public GameObject GetEnemy(int variation)
     {
@@ -16,4 +21,3 @@ public sealed class BalloonPrefabConfig : ScriptableObject
             ? null : _enemies[variation % _enemies.Length];
     }
 }
-

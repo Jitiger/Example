@@ -27,6 +27,7 @@ public sealed class BalloonGameConfig : ScriptableObject
     [SerializeField] private float _phaseDelay = 1.2f;
     [SerializeField] private float _respawnDelay = 1.1f;
     [SerializeField] private float _respawnInvincibility = 1.4f;
+    [SerializeField] private bool _friendlyFire;
 
     [Header("World")]
     [SerializeField] private Vector2 _bodySize = new(0.58f, 0.78f);
@@ -38,7 +39,11 @@ public sealed class BalloonGameConfig : ScriptableObject
     [SerializeField] private float _topLimit = 4.8f;
     [SerializeField] private float _wrapPadding = 0.45f;
     [SerializeField] private float _ceilingBounce = -0.25f;
-    [SerializeField] private Vector2 _playerSpawn = new(0f, -3.35f);
+    [SerializeField] private Vector2[] _playerSpawns =
+    {
+        new(-1f, -3.35f),
+        new(1f, -3.35f)
+    };
     [SerializeField] private Vector2[] _enemySpawns =
     {
         new(-4.7f, 0.2f),
@@ -106,12 +111,12 @@ public sealed class BalloonGameConfig : ScriptableObject
     internal float PhaseDelay => _phaseDelay;
     internal float RespawnDelay => _respawnDelay;
     internal float RespawnInvincibility => _respawnInvincibility;
+    internal bool FriendlyFire => _friendlyFire;
     internal float CameraSize => _cameraSize;
     internal float CameraDepth => _cameraDepth;
     internal float TopLimit => _topLimit;
     internal float WrapPadding => _wrapPadding;
     internal float CeilingBounce => _ceilingBounce;
-    internal Vector2 PlayerSpawn => _playerSpawn;
     internal Vector2[] EnemySpawns => _enemySpawns;
     internal PlatformDefinition[] Platforms => _platforms;
     internal int PlayerBalloonCount => _playerBalloonCount;
@@ -149,11 +154,23 @@ public sealed class BalloonGameConfig : ScriptableObject
     internal float EnemyTrackingDeadZone => _enemyTrackingDeadZone;
     internal float EnemyFlapHeightThreshold => _enemyFlapHeightThreshold;
 
+    internal Vector2 GetPlayerSpawn(PlayerNumber player)
+    {
+        int index = (int)player;
+        return _playerSpawns != null && index < _playerSpawns.Length
+            ? _playerSpawns[index]
+            : Vector2.zero;
+    }
+
     private void OnValidate()
     {
         _startingLives = Mathf.Max(1, _startingLives);
         _maximumPhase = Mathf.Max(1, _maximumPhase);
         _enemyPoolCapacity = Mathf.Max(1, _enemyPoolCapacity);
+        if (_playerSpawns == null || _playerSpawns.Length < PlayerRoster.Count)
+        {
+            _playerSpawns = new[] { new Vector2(-1f, -3.35f), new Vector2(1f, -3.35f) };
+        }
         _playerBalloonCount = Mathf.Clamp(_playerBalloonCount, 1, 2);
         _enemyBalloonCount = Mathf.Clamp(_enemyBalloonCount, 1, 2);
         _cameraSize = Mathf.Max(0.01f, _cameraSize);

@@ -9,7 +9,7 @@ internal static class BalloonPrefabBuilder
     private const string PrefabsFolder = GeneratedFolder + "/Prefabs";
     private const string SpritesFolder = GeneratedFolder + "/Sprites";
 
-    [MenuItem("Balloon Fight/Prepare Phase 3")]
+    [MenuItem("Balloon Fight/Prepare Local Co-op")]
     private static void Prepare()
     {
         if (EditorApplication.isPlayingOrWillChangePlaymode)
@@ -33,10 +33,17 @@ internal static class BalloonPrefabBuilder
         root.SetActive(false);
         try
         {
-            GameObject player = LoadPrefab("Player");
-            if (player == null)
+            GameObject[] players = new GameObject[PlayerRoster.Count];
+            for (int index = 0; index < players.Length; index++)
             {
-                player = Save(FighterFactory.CreatePlayer(root.transform, game).gameObject, "Player");
+                string assetName = $"Player{index + 1}";
+                players[index] = LoadPrefab(assetName);
+                if (players[index] == null)
+                {
+                    players[index] = Save(
+                        FighterFactory.CreatePlayerObject(root.transform, game, (PlayerNumber)index),
+                        assetName);
+                }
             }
 
             GameObject[] enemies = new GameObject[2];
@@ -46,7 +53,7 @@ internal static class BalloonPrefabBuilder
                 enemies[index] = LoadPrefab(assetName);
                 if (enemies[index] == null)
                 {
-                    enemies[index] = Save(FighterFactory.CreateEnemy(root.transform, game, index).gameObject, assetName);
+                    enemies[index] = Save(FighterFactory.CreateEnemyObject(root.transform, game, index), assetName);
                 }
             }
 
@@ -60,8 +67,16 @@ internal static class BalloonPrefabBuilder
             }
 
             SerializedObject serialized = new(prefabs);
-            AssignIfEmpty(serialized.FindProperty("_player"), player);
             AssignIfEmpty(serialized.FindProperty("_stage"), stage);
+            SerializedProperty playerArray = serialized.FindProperty("_players");
+            if (playerArray.arraySize < players.Length)
+            {
+                playerArray.arraySize = players.Length;
+            }
+            for (int index = 0; index < players.Length; index++)
+            {
+                AssignIfEmpty(playerArray.GetArrayElementAtIndex(index), players[index]);
+            }
             SerializedProperty enemyArray = serialized.FindProperty("_enemies");
             if (enemyArray.arraySize == 0)
             {
@@ -74,7 +89,7 @@ internal static class BalloonPrefabBuilder
             serialized.ApplyModifiedPropertiesWithoutUndo();
             AssetDatabase.SaveAssets();
             Selection.activeObject = prefabs;
-            Debug.Log("Phase 3 assets prepared. Existing assets and references were preserved.");
+            Debug.Log("Local co-op assets prepared. Existing assets and references were preserved.");
         }
         finally
         {

@@ -4,11 +4,11 @@
 
 1. ZIP을 새 폴더에 풀고 Unity Hub에서 폴더를 추가합니다.
 2. Unity 6000.3.22f1로 엽니다.
-3. Play 모드가 아닌 상태에서 **Balloon Fight > Prepare Phase 3**를 실행합니다.
+3. Play 모드가 아닌 상태에서 **Balloon Fight > Prepare Local Co-op**를 실행합니다.
 4. 생성된 Assets/Resources/BalloonPrefabConfig를 확인합니다.
 5. Assets/Scenes/SampleScene을 열고 실행합니다.
 
-이 메뉴는 플레이어·적 2종·스테이지 프리팹과 영구 스프라이트 에셋을 생성하고 연결합니다.
+이 메뉴는 1P·2P·적 2종·스테이지 프리팹과 영구 스프라이트 에셋을 생성하고 연결합니다.
 이미 존재하는 프리팹/설정 값은 덮어쓰지 않습니다.
 Unity가 없는 제작 환경이므로 ZIP 안에 생성 완료된 프리팹이 들어 있는 것은 아닙니다.
 메뉴 실행 전에는 기존 런타임 생성 방식으로 동작합니다.
@@ -23,6 +23,16 @@ Unity가 없는 제작 환경이므로 ZIP 안에 생성 완료된 프리팹이 
 | BalloonUiConfig | HUD 위치/문구/글꼴 크기/색상/기준 해상도 |
 | BalloonFeedbackConfig | 풍선 파열 조각 개수/크기/속도/수명/풀 크기 |
 | BalloonPrefabConfig | 런타임에 사용할 플레이어/적/스테이지 프리팹 |
+
+## 로컬 2인 조작
+
+- 1P: `A / D`, `Space` 또는 `W`
+- 2P: `← / →`, `↑` 또는 `Enter`
+- 공통 재시작: `R`
+
+두 플레이어의 목숨과 부활은 따로 처리됩니다. 한 명이 전부 쓰러져도 다른
+플레이어가 살아 있으면 계속 진행합니다. 기본 설정에서는 플레이어끼리 풍선을
+터뜨리지 않으며 `BalloonGameConfig.FriendlyFire`에서 변경할 수 있습니다.
 
 프리팹 생성 이후 외형과 발판 배치는 생성된 프리팹에서 편집합니다.
 VisualConfig의 스프라이트/색상은 생성 시 사용되며 이미 생성된 프리팹을 자동 변경하지 않습니다.
@@ -49,7 +59,7 @@ Unity Editor가 없어 Unity 컴파일과 Play Mode는 검증하지 않았습니
 
 ## Unity 확인
 
-- Prepare Phase 3 실행 후 Console 오류와 네 프리팹의 Missing Script 여부.
+- Prepare Local Co-op 실행 후 Console 오류와 다섯 프리팹의 Missing Script 여부.
 - 에디터 재실행 후 생성 스프라이트 참조 보존.
 - 이동/날갯짓, 풍선 파열 후 이펙트 종료.
 - 적 사망→다음 페이즈, 부활, 게임오버→재시작 반복.

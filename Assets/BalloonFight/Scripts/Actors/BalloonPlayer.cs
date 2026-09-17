@@ -6,6 +6,19 @@ internal sealed class BalloonPlayer : BalloonActor
 {
     private bool _isGrounded;
     private Transform _visual;
+    private PlayerNumber _playerNumber;
+
+    internal PlayerNumber PlayerNumber => _playerNumber;
+    internal bool IsAvailable => gameObject.activeSelf && !IsDead;
+
+    internal void InitializePlayer(
+        BalloonFightRuntime game,
+        BalloonGameConfig config,
+        PlayerNumber playerNumber)
+    {
+        _playerNumber = playerNumber;
+        Initialize(game, config, config.PlayerBalloonCount);
+    }
 
     internal override void Initialize(BalloonFightRuntime game, BalloonGameConfig config, int balloonCount)
     {
@@ -23,7 +36,7 @@ internal sealed class BalloonPlayer : BalloonActor
             return;
         }
 
-        if (!Game.Input.FlapPressed)
+        if (!Game.Input.IsFlapPressed(_playerNumber))
         {
             return;
         }
@@ -43,7 +56,7 @@ internal sealed class BalloonPlayer : BalloonActor
             return;
         }
 
-        float horizontalInput = Game.Input.Horizontal;
+        float horizontalInput = Game.Input.GetHorizontal(_playerNumber);
         float acceleration = _isGrounded ? Config.GroundAcceleration : Config.AirAcceleration;
         Body.AddForce(Vector2.right * horizontalInput * acceleration);
         Body.linearDamping = _isGrounded ? Config.GroundDamping : Config.AirDamping;
@@ -84,7 +97,7 @@ internal sealed class BalloonPlayer : BalloonActor
         Body.gravityScale = Config.PlayerDeathGravity;
         Body.freezeRotation = false;
         Body.angularVelocity = Config.PlayerDeathSpin;
-        Game.PlayerDefeated();
+        Game.PlayerDefeated(this);
         StartCoroutine(DisableAfterDelay());
     }
 

@@ -1,35 +1,30 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 internal sealed class BalloonFightRuntime : MonoBehaviour
 {
     private const string ConfigResourcePath = "BalloonGameConfig";
-
     [SerializeField] private BalloonGameConfig _config;
 
     private readonly List<BalloonEnemy> _enemies = new();
-    private BalloonEnemyPool _enemyPool;
-    private BalloonHud _hud;
-    private Camera _camera;
-    private BalloonPlayer _player;
-    private BalloonInputConfig _input;
-    private bool _ownsConfig;
-    private bool _ownsInput;
+    private readonly BalloonPlayer[] _players = new BalloonPlayer[PlayerRoster.Count];
+    private readonly int[] _lives = new int[PlayerRoster.Count];
     private readonly List<ScriptableObject> _ownedSettings = new();
+    private BalloonEnemyPool _enemyPool;
+    private BalloonPopPool _popPool;
+    private BalloonHud _hud;
+    private BalloonInputConfig _input;
     private BalloonVisualConfig _visual;
     private BalloonUiConfig _ui;
     private BalloonFeedbackConfig _feedback;
-    private BalloonPopPool _popPool;
+    private Camera _camera;
     private int _score;
-    private int _lives;
     private int _phase;
     private bool _isGameOver;
     private bool _isAllClear;
     private bool _isChangingPhase;
 
-    internal BalloonPlayer Player => _player;
     internal BalloonInputConfig Input => _input;
     internal bool IsPlaying => !_isGameOver && !_isAllClear;
 
@@ -44,49 +39,24 @@ internal sealed class BalloonFightRuntime : MonoBehaviour
 
     private void Awake()
     {
-        if (_config == null)
-        {
-            _config = Resources.Load<BalloonGameConfig>(ConfigResourcePath);
-        }
-
-        if (_config == null)
-        {
-            _config = ScriptableObject.CreateInstance<BalloonGameConfig>();
-            _ownsConfig = true;
-        }
-
-        _input = Resources.Load<BalloonInputConfig>(nameof(BalloonInputConfig));
-        if (_input == null)
-        {
-            _input = ScriptableObject.CreateInstance<BalloonInputConfig>();
-            _ownsInput = true;
-        }
-
-        _lives = _config.StartingLives;
+        _config = LoadSettings(ConfigResourcePath, _config);
+        _input = LoadSettings<BalloonInputConfig>();
         _visual = LoadSettings<BalloonVisualConfig>();
         _ui = LoadSettings<BalloonUiConfig>();
         _feedback = LoadSettings<BalloonFeedbackConfig>();
         RetroFactory.Configure(_visual);
-        _phase = 1;
+        ResetGameState();
     }
 
     private void Start()
     {
         Application.targetFrameRate = _config.TargetFrameRate;
         BuildCamera();
-        BalloonPrefabConfig prefabs = Resources.Load<BalloonPrefabConfig>(nameof(BalloonPrefabConfig));
-        if (prefabs != null && prefabs.Stage != null)
-        {
-            Instantiate(prefabs.Stage, transform);
-        }
-        else
-        {
-            BalloonStageBuilder.Build(transform, _config, _visual);
-        }
+        BuildStage();
         _enemyPool = new BalloonEnemyPool(transform, _config);
         _popPool = new BalloonPopPool(transform, _feedback, RetroFactory.GetSquare());
         _hud = new BalloonHud(_ui, _input);
-        SpawnPlayer();
+        SpawnAllPlayers();
         SpawnPhase();
     }
 
@@ -100,7 +70,15 @@ internal sealed class BalloonFightRuntime : MonoBehaviour
 
     private void OnGUI()
     {
-        _hud?.Draw(_score, _phase, _lives, _enemies.Count, _isChangingPhase, _isGameOver, _isAllClear);
+        _hud?.Draw(
+            _score,
+            _phase,
+            _lives[(int)PlayerNumber.One],
+            _lives[(int)PlayerNumber.Two],
+            _enemies.Count,
+            _isChangingPhase,
+            _isGameOver,
+            _isAllClear);
     }
 
     private void OnDestroy()
@@ -111,24 +89,33 @@ internal sealed class BalloonFightRuntime : MonoBehaviour
         {
             Destroy(settings);
         }
-        if (_ownsConfig) Destroy(_config);
-        if (_ownsInput) Destroy(_input);
-    }
-
-    private T LoadSettings<T>() where T : ScriptableObject
-    {
-        T settings = Resources.Load<T>(typeof(T).Name);
-        if (settings == null)
-        {
-            settings = ScriptableObject.CreateInstance<T>();
-            _ownedSettings.Add(settings);
-        }
-        return settings;
     }
 
     internal void BalloonPopped(Vector3 position)
     {
         _popPool?.Play(position);
+    }
+
+    internal BalloonPlayer GetNearestPlayer(Vector3 position)
+    {
+        BalloonPlayer nearest = null;
+        float nearestDistance = float.MaxValue;
+        foreach (BalloonPlayer player in _players)
+        {
+            if (player == null || !player.IsAvailable)
+            {
+                continue;
+            }
+
+            float distance = (player.transform.position - position).sqrMagnitude;
+            if (distance < nearestDistance)
+            {
+                nearest = player;
+                nearestDistance = distance;
+            }
+        }
+
+        return nearest;
     }
 
     internal void EnemyDefeated(BalloonEnemy enemy)
@@ -139,7 +126,7 @@ internal sealed class BalloonFightRuntime : MonoBehaviour
         }
 
         _score += _config.EnemyScore;
-        if (_enemies.Count != 0 || _isChangingPhase || _isGameOver || _isAllClear)
+        if (_enemies.Count != 0 || _isChangingPhase || !IsPlaying)
         {
             return;
         }
@@ -153,28 +140,31 @@ internal sealed class BalloonFightRuntime : MonoBehaviour
         StartCoroutine(NextPhase());
     }
 
-    internal void PlayerDefeated()
+    internal void PlayerDefeated(BalloonPlayer player)
     {
-        if (_isGameOver || _isAllClear)
+        if (player == null || !IsPlaying)
         {
             return;
         }
 
-        _lives--;
-        if (_lives <= 0)
+        int index = (int)player.PlayerNumber;
+        _lives[index] = Mathf.Max(0, _lives[index] - 1);
+        if (_lives[index] > 0)
+        {
+            StartCoroutine(RespawnPlayer(player.PlayerNumber));
+            return;
+        }
+
+        if (AllPlayersEliminated())
         {
             _isGameOver = true;
-            return;
         }
-
-        StartCoroutine(RespawnPlayer());
     }
 
     internal void Wrap(Transform target)
     {
         float edge = _camera.orthographicSize * _camera.aspect + _config.WrapPadding;
         Vector3 position = target.position;
-
         if (position.x > edge)
         {
             position.x = -edge;
@@ -183,7 +173,6 @@ internal sealed class BalloonFightRuntime : MonoBehaviour
         {
             position.x = edge;
         }
-
         target.position = position;
     }
 
@@ -197,13 +186,25 @@ internal sealed class BalloonFightRuntime : MonoBehaviour
         Vector3 position = target.position;
         position.y = _config.TopLimit;
         target.position = position;
-
         Vector2 velocity = body.linearVelocity;
         if (velocity.y > 0f)
         {
             velocity.y *= _config.CeilingBounce;
             body.linearVelocity = velocity;
         }
+    }
+
+    private T LoadSettings<T>(string resourcePath = null, T assigned = null) where T : ScriptableObject
+    {
+        T settings = assigned != null
+            ? assigned
+            : Resources.Load<T>(resourcePath ?? typeof(T).Name);
+        if (settings == null)
+        {
+            settings = ScriptableObject.CreateInstance<T>();
+            _ownedSettings.Add(settings);
+        }
+        return settings;
     }
 
     private void BuildCamera()
@@ -216,7 +217,6 @@ internal sealed class BalloonFightRuntime : MonoBehaviour
         GameObject cameraObject = new("Balloon Fight Camera");
         cameraObject.transform.SetParent(transform);
         cameraObject.tag = "MainCamera";
-
         _camera = cameraObject.AddComponent<Camera>();
         _camera.orthographic = true;
         _camera.orthographicSize = _config.CameraSize;
@@ -225,16 +225,35 @@ internal sealed class BalloonFightRuntime : MonoBehaviour
         _camera.backgroundColor = _visual.Background;
     }
 
-    private void SpawnPlayer()
+    private void BuildStage()
     {
-        if (_player == null)
+        BalloonPrefabConfig prefabs = Resources.Load<BalloonPrefabConfig>(nameof(BalloonPrefabConfig));
+        if (prefabs != null && prefabs.Stage != null)
         {
-            _player = FighterFactory.CreatePlayer(transform, _config);
+            Instantiate(prefabs.Stage, transform);
+            return;
+        }
+        BalloonStageBuilder.Build(transform, _config, _visual);
+    }
+
+    private void SpawnAllPlayers()
+    {
+        SpawnPlayer(PlayerNumber.One);
+        SpawnPlayer(PlayerNumber.Two);
+    }
+
+    private void SpawnPlayer(PlayerNumber playerNumber)
+    {
+        int index = (int)playerNumber;
+        if (_players[index] == null)
+        {
+            _players[index] = FighterFactory.CreatePlayer(transform, _config, playerNumber);
         }
 
-        _player.gameObject.SetActive(true);
-        _player.transform.position = _config.PlayerSpawn;
-        _player.Initialize(this, _config, _config.PlayerBalloonCount);
+        BalloonPlayer player = _players[index];
+        player.gameObject.SetActive(true);
+        player.transform.position = _config.GetPlayerSpawn(playerNumber);
+        player.InitializePlayer(this, _config, playerNumber);
     }
 
     private void SpawnPhase()
@@ -257,33 +276,55 @@ internal sealed class BalloonFightRuntime : MonoBehaviour
         _isChangingPhase = false;
     }
 
-    private IEnumerator RespawnPlayer()
+    private IEnumerator RespawnPlayer(PlayerNumber playerNumber)
     {
         yield return new WaitForSeconds(_config.RespawnDelay);
-        if (!IsPlaying)
+        if (!IsPlaying || _lives[(int)playerNumber] <= 0)
         {
             yield break;
         }
 
-        SpawnPlayer();
-        _player.SetInvincible(_config.RespawnInvincibility);
+        SpawnPlayer(playerNumber);
+        _players[(int)playerNumber].SetInvincible(_config.RespawnInvincibility);
+    }
+
+    private bool AllPlayersEliminated()
+    {
+        foreach (int life in _lives)
+        {
+            if (life > 0)
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void Restart()
     {
         StopAllCoroutines();
         _popPool.Reset();
-        _player?.gameObject.SetActive(false);
+        foreach (BalloonPlayer player in _players)
+        {
+            player?.gameObject.SetActive(false);
+        }
         _enemyPool.ReleaseAll(GetComponentsInChildren<BalloonEnemy>(true));
         _enemies.Clear();
+        ResetGameState();
+        SpawnAllPlayers();
+        SpawnPhase();
+    }
 
+    private void ResetGameState()
+    {
         _score = 0;
-        _lives = _config.StartingLives;
         _phase = 1;
         _isGameOver = false;
         _isAllClear = false;
         _isChangingPhase = false;
-        SpawnPlayer();
-        SpawnPhase();
+        for (int index = 0; index < _lives.Length; index++)
+        {
+            _lives[index] = _config.StartingLives;
+        }
     }
 }

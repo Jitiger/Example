@@ -80,7 +80,7 @@ internal sealed class BalloonEnemy : BalloonActor, IPoolable
 
     private void TryFlap()
     {
-        BalloonPlayer player = Game.Player;
+        BalloonPlayer player = Game.GetNearestPlayer(transform.position);
         if (player == null || Time.time < _nextFlapTime)
         {
             return;
@@ -97,7 +97,7 @@ internal sealed class BalloonEnemy : BalloonActor, IPoolable
 
     private void DecideDirection()
     {
-        BalloonPlayer player = Game == null ? null : Game.Player;
+        BalloonPlayer player = Game == null ? null : Game.GetNearestPlayer(transform.position);
         if (player != null && Random.value < Config.EnemyTrackingChance)
         {
             float delta = player.transform.position.x - transform.position.x;

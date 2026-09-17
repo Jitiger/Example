@@ -1,25 +1,31 @@
 using UnityEngine;
 
-internal static class RetroFactory
+public static class RetroFactory
 {
     private static BalloonVisualConfig _config;
-    internal static void Configure(BalloonVisualConfig config)
+    public static void Configure(BalloonVisualConfig config)
     {
         _config = config;
         _player = null;
+        _playerTwo = null;
         _enemyA = null;
         _enemyB = null;
         _redBalloon = null;
         _yellowBalloon = null;
+        _playerTwoBalloonA = null;
+        _playerTwoBalloonB = null;
         _pinkBalloon = null;
     }
 
     private static Sprite _square;
     private static Sprite _player;
+    private static Sprite _playerTwo;
     private static Sprite _enemyA;
     private static Sprite _enemyB;
     private static Sprite _redBalloon;
     private static Sprite _yellowBalloon;
+    private static Sprite _playerTwoBalloonA;
+    private static Sprite _playerTwoBalloonB;
     private static Sprite _pinkBalloon;
 
     internal static GameObject CreateBlock(Transform parent, string objectName, Vector2 position, Vector2 size, Color color, int sortingOrder)
@@ -43,14 +49,14 @@ internal static class RetroFactory
         visual.transform.localPosition = Vector3.zero;
 
         SpriteRenderer visualRenderer = visual.AddComponent<SpriteRenderer>();
-        visualRenderer.sprite = isPlayer ? GetPlayerSprite() : GetEnemySprite(variation);
+        visualRenderer.sprite = isPlayer ? GetPlayerSprite(variation) : GetEnemySprite(variation);
         visualRenderer.sortingOrder = _config.ActorOrder;
 
         for (int index = 0; index < balloonCount; index++)
         {
             float x = (index - (balloonCount - 1) / 2f) * _config.BalloonSpacing;
             CreateRope(root, x);
-            CreateBalloon(root, isPlayer, index, x);
+            CreateBalloon(root, isPlayer, index, x, variation);
         }
     }
 
@@ -61,14 +67,16 @@ internal static class RetroFactory
         rope.transform.localRotation = Quaternion.Euler(0f, 0f, -x * _config.RopeAngleFactor);
     }
 
-    private static void CreateBalloon(Transform root, bool isPlayer, int index, float x)
+    private static void CreateBalloon(Transform root, bool isPlayer, int index, float x, int variation)
     {
         GameObject balloon = new($"Balloon {index + 1}");
         balloon.transform.SetParent(root);
         balloon.transform.localPosition = new Vector3(x, _config.BalloonHeight, 0f);
 
         SpriteRenderer renderer = balloon.AddComponent<SpriteRenderer>();
-        renderer.sprite = isPlayer ? index == 0 ? GetRedBalloon() : GetYellowBalloon() : GetPinkBalloon();
+        renderer.sprite = isPlayer
+            ? GetPlayerBalloon(index, variation)
+            : GetPinkBalloon();
         renderer.sortingOrder = _config.BalloonOrder;
 
         CircleCollider2D collider = balloon.AddComponent<CircleCollider2D>();
@@ -92,10 +100,36 @@ internal static class RetroFactory
         return _square;
     }
 
-    private static Sprite GetPlayerSprite()
+    private static Sprite GetPlayerSprite(int variation)
     {
-        if (_config.PlayerSprite != null) return _config.PlayerSprite;
-        return _player ??= CreateFighterSprite(_config.PlayerBody, _config.PlayerHelmet, _config.PlayerSkin);
+        if (variation == 0)
+        {
+            if (_config.PlayerSprite != null) return _config.PlayerSprite;
+            return _player ??= CreateFighterSprite(_config.PlayerBody, _config.PlayerHelmet, _config.PlayerSkin);
+        }
+
+        if (_config.PlayerTwoSprite != null) return _config.PlayerTwoSprite;
+        return _playerTwo ??= CreateFighterSprite(
+            _config.PlayerTwoBody,
+            _config.PlayerTwoHelmet,
+            _config.PlayerTwoSkin);
+    }
+
+    private static Sprite GetPlayerBalloon(int balloonIndex, int variation)
+    {
+        if (variation == 0)
+        {
+            return balloonIndex == 0 ? GetRedBalloon() : GetYellowBalloon();
+        }
+
+        if (balloonIndex == 0)
+        {
+            if (_config.PlayerTwoBalloonASprite != null) return _config.PlayerTwoBalloonASprite;
+            return _playerTwoBalloonA ??= CreateBalloonSprite(_config.PlayerTwoBalloonA);
+        }
+
+        if (_config.PlayerTwoBalloonBSprite != null) return _config.PlayerTwoBalloonBSprite;
+        return _playerTwoBalloonB ??= CreateBalloonSprite(_config.PlayerTwoBalloonB);
     }
 
     private static Sprite GetEnemySprite(int variation)

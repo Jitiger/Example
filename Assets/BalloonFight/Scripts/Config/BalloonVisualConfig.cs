@@ -37,6 +37,9 @@ public sealed class BalloonVisualConfig : ScriptableObject
     [SerializeField] private Color _playerBody = new Color32(42, 117, 215, 255);
     [SerializeField] private Color _playerHelmet = new Color32(232, 55, 55, 255);
     [SerializeField] private Color _playerSkin = new Color32(249, 207, 153, 255);
+    [SerializeField] private Color _playerTwoBody = new Color32(50, 180, 105, 255);
+    [SerializeField] private Color _playerTwoHelmet = new Color32(248, 205, 65, 255);
+    [SerializeField] private Color _playerTwoSkin = new Color32(249, 207, 153, 255);
     [SerializeField] private Color _enemyABody = new Color32(134, 68, 179, 255);
     [SerializeField] private Color _enemyAHelmet = new Color32(240, 188, 65, 255);
     [SerializeField] private Color _enemyASkin = new Color32(166, 211, 102, 255);
@@ -45,12 +48,17 @@ public sealed class BalloonVisualConfig : ScriptableObject
     [SerializeField] private Color _enemyBSkin = new Color32(248, 194, 137, 255);
     [SerializeField] private Color _playerBalloonA = new Color32(237, 55, 72, 255);
     [SerializeField] private Color _playerBalloonB = new Color32(250, 190, 54, 255);
+    [SerializeField] private Color _playerTwoBalloonA = new Color32(65, 205, 245, 255);
+    [SerializeField] private Color _playerTwoBalloonB = new Color32(120, 235, 130, 255);
     [SerializeField] private Color _enemyBalloon = new Color32(214, 82, 177, 255);
     [SerializeField] private Sprite _playerSprite = null;
+    [SerializeField] private Sprite _playerTwoSprite = null;
     [SerializeField] private Sprite _enemyASprite = null;
     [SerializeField] private Sprite _enemyBSprite = null;
     [SerializeField] private Sprite _playerBalloonASprite = null;
     [SerializeField] private Sprite _playerBalloonBSprite = null;
+    [SerializeField] private Sprite _playerTwoBalloonASprite = null;
+    [SerializeField] private Sprite _playerTwoBalloonBSprite = null;
     [SerializeField] private Sprite _enemyBalloonSprite = null;
 
     public Color Background => _background;
@@ -87,6 +95,9 @@ public sealed class BalloonVisualConfig : ScriptableObject
     public Color PlayerBody => _playerBody;
     public Color PlayerHelmet => _playerHelmet;
     public Color PlayerSkin => _playerSkin;
+    public Color PlayerTwoBody => _playerTwoBody;
+    public Color PlayerTwoHelmet => _playerTwoHelmet;
+    public Color PlayerTwoSkin => _playerTwoSkin;
     public Color EnemyABody => _enemyABody;
     public Color EnemyAHelmet => _enemyAHelmet;
     public Color EnemyASkin => _enemyASkin;
@@ -95,12 +106,16 @@ public sealed class BalloonVisualConfig : ScriptableObject
     public Color EnemyBSkin => _enemyBSkin;
     public Color PlayerBalloonA => _playerBalloonA;
     public Color PlayerBalloonB => _playerBalloonB;
+    public Color PlayerTwoBalloonA => _playerTwoBalloonA;
+    public Color PlayerTwoBalloonB => _playerTwoBalloonB;
     public Color EnemyBalloon => _enemyBalloon;
     public Sprite PlayerSprite => _playerSprite;
+    public Sprite PlayerTwoSprite => _playerTwoSprite;
     public Sprite EnemyASprite => _enemyASprite;
     public Sprite EnemyBSprite => _enemyBSprite;
     public Sprite PlayerBalloonASprite => _playerBalloonASprite;
     public Sprite PlayerBalloonBSprite => _playerBalloonBSprite;
+    public Sprite PlayerTwoBalloonASprite => _playerTwoBalloonASprite;
+    public Sprite PlayerTwoBalloonBSprite => _playerTwoBalloonBSprite;
     public Sprite EnemyBalloonSprite => _enemyBalloonSprite;
 }
-

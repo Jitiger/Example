@@ -1,19 +1,39 @@
 using UnityEngine;
 
-internal static class FighterFactory
+public static class FighterFactory
 {
-    internal static BalloonPlayer CreatePlayer(Transform parent, BalloonGameConfig config)
+    public static GameObject CreatePlayerObject(
+        Transform parent,
+        BalloonGameConfig config,
+        PlayerNumber playerNumber)
+    {
+        return CreatePlayer(parent, config, playerNumber).gameObject;
+    }
+
+    public static GameObject CreateEnemyObject(Transform parent, BalloonGameConfig config, int variation)
+    {
+        return CreateEnemy(parent, config, variation).gameObject;
+    }
+
+    internal static BalloonPlayer CreatePlayer(Transform parent, BalloonGameConfig config, PlayerNumber playerNumber)
     {
         BalloonPrefabConfig prefabs = Resources.Load<BalloonPrefabConfig>(nameof(BalloonPrefabConfig));
-        if (prefabs != null && prefabs.Player != null)
+        GameObject prefab = prefabs == null ? null : prefabs.GetPlayer(playerNumber);
+        if (prefab != null)
         {
-            GameObject instance = Object.Instantiate(prefabs.Player, parent);
+            GameObject instance = Object.Instantiate(prefab, parent);
             BalloonPlayer actor = instance.GetComponent<BalloonPlayer>();
             instance.GetComponent<BalloonBody>().SetOwner(actor);
             return actor;
         }
-        GameObject fighter = CreateBody(parent, "Player", config.PlayerSpawn, config.PlayerGravity, config);
-        RetroFactory.CreateFighter(fighter.transform, true, config.PlayerBalloonCount, 0);
+        int variation = (int)playerNumber;
+        GameObject fighter = CreateBody(
+            parent,
+            $"Player {variation + 1}",
+            config.GetPlayerSpawn(playerNumber),
+            config.PlayerGravity,
+            config);
+        RetroFactory.CreateFighter(fighter.transform, true, config.PlayerBalloonCount, variation);
 
         BalloonPlayer player = fighter.AddComponent<BalloonPlayer>();
         fighter.GetComponent<BalloonBody>().SetOwner(player);

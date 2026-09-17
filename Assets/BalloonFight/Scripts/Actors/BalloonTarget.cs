@@ -14,7 +14,11 @@ internal sealed class BalloonTarget : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D other)
     {
         BalloonBody attackingBody = other.GetComponent<BalloonBody>();
-        if (_owner == null || attackingBody == null || attackingBody.Owner == null || attackingBody.Owner == _owner)
+        if (_owner == null
+            || attackingBody == null
+            || attackingBody.Owner == null
+            || attackingBody.Owner == _owner
+            || !_owner.CanReceiveHitFrom(attackingBody.Owner))
         {
             return;
         }

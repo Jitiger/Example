@@ -15,7 +15,7 @@ internal sealed class BalloonHud
         _input = input;
     }
 
-    internal void Draw(int score, int phase, int lives, int enemyCount,
+    internal void Draw(int score, int phase, int playerOneLives, int playerTwoLives, int enemyCount,
         bool isChangingPhase, bool isGameOver, bool isAllClear)
     {
         EnsureStyles();
@@ -28,10 +28,17 @@ internal sealed class BalloonHud
         {
             GUI.Label(_config.ScoreRect, string.Format(_config.ScoreFormat, score), _hudStyle);
             GUI.Label(_config.PhaseRect, string.Format(_config.PhaseFormat, phase), _hudStyle);
-            GUI.Label(_config.LivesRect, string.Format(_config.LivesFormat, lives), _hudStyle);
+            GUI.Label(_config.PlayerOneLivesRect,
+                string.Format(_config.PlayerOneLivesFormat, playerOneLives), _hudStyle);
+            GUI.Label(_config.PlayerTwoLivesRect,
+                string.Format(_config.PlayerTwoLivesFormat, playerTwoLives), _hudStyle);
             GUI.Label(_config.EnemiesRect, string.Format(_config.EnemiesFormat, enemyCount), _smallStyle);
-            GUI.Label(_config.ControlsRect, string.Format(_config.ControlsFormat,
-                _input.LeftLabel, _input.RightLabel, _input.FlapLabel), _smallStyle);
+            GUI.Label(_config.PlayerOneControlsRect,
+                string.Format(_config.PlayerOneControlsFormat,
+                    _input.GetControlsLabel(PlayerNumber.One)), _smallStyle);
+            GUI.Label(_config.PlayerTwoControlsRect,
+                string.Format(_config.PlayerTwoControlsFormat,
+                    _input.GetControlsLabel(PlayerNumber.Two)), _smallStyle);
             if (isGameOver || isAllClear)
             {
                 DrawCenter(isGameOver ? _config.GameOver : _config.AllClear,
