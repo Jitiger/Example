@@ -27,12 +27,17 @@ public sealed class GameManager : MonoBehaviour
     [SerializeField] private GameObject[] _enemyPrefabs;
     [SerializeField] private GameObject _stagePrefab;
 
+    [Header("기능 컴포넌트")]
+    [SerializeField] private PlayerInput _input;
+    [SerializeField] private MapBoundary _mapBoundary;
+    [SerializeField] private BalloonStageBuilder _stageBuilder;
+    [SerializeField] private BalloonHud _hud;
+    [SerializeField] private BalloonPopEffect _popEffect;
+    [SerializeField] private RetroFactory _retroFactory;
+
     private GameStateManager _gameStateManager;
-    private PlayerInput _input;
     private BalloonPopPool _popPool;
     private FighterSpawner _spawner;
-    private BalloonHud _hud;
-    private MapBoundary _mapBoundary;
 
     internal PlayerInput Input => _input;
     internal bool IsPlaying => _gameStateManager.IsPlaying;
@@ -43,21 +48,15 @@ public sealed class GameManager : MonoBehaviour
     internal int EnemyPoolCapacity => _enemyPoolCapacity;
     internal Vector2[] EnemySpawns => _enemySpawns;
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void Boot()
-    {
-        if (FindFirstObjectByType<GameManager>() == null)
-        {
-            new GameObject("Game Manager").AddComponent<GameManager>();
-        }
-    }
-
     private void Awake()
     {
-        _input = GetOrAddComponent<PlayerInput>();
-        _hud = GetOrAddComponent<BalloonHud>();
-        _mapBoundary = GetOrAddComponent<MapBoundary>();
-        RetroFactory.Configure(GetOrAddComponent<RetroFactory>());
+        if (!HasRequiredComponents())
+        {
+            enabled = false;
+            return;
+        }
+
+        RetroFactory.Configure(_retroFactory);
         _gameStateManager = new GameStateManager(this);
     }
 
@@ -79,7 +78,7 @@ public sealed class GameManager : MonoBehaviour
         _mapBoundary.SetCamera(_gameCamera);
         BuildStage();
         _spawner = new FighterSpawner(transform, this, _playerPrefabs, _enemyPrefabs);
-        _popPool = new BalloonPopPool(transform, GetOrAddComponent<BalloonPopEffect>(), RetroFactory.GetSquare());
+        _popPool = new BalloonPopPool(transform, _popEffect, RetroFactory.GetSquare());
         _spawner.SpawnAllPlayers();
         _spawner.SpawnPhase(_gameStateManager.Phase);
     }
@@ -134,10 +133,16 @@ public sealed class GameManager : MonoBehaviour
     internal void Wrap(Transform target) => _mapBoundary.Wrap(target);
     internal void ClampVertical(Transform target, Rigidbody2D body) => _mapBoundary.ClampVertical(target, body);
 
-    private T GetOrAddComponent<T>() where T : Component
+    private bool HasRequiredComponents()
     {
-        T component = GetComponent<T>();
-        return component != null ? component : gameObject.AddComponent<T>();
+        bool hasStage = _stagePrefab != null || _stageBuilder != null;
+        bool isReady = _input != null && _mapBoundary != null && hasStage && _hud != null && _popEffect != null && _retroFactory != null;
+        if (!isReady)
+        {
+            Debug.LogError("GameManager의 기능 컴포넌트 참조를 모두 연결해주세요.", this);
+        }
+
+        return isReady;
     }
 
     private void BuildStage()
@@ -148,7 +153,7 @@ public sealed class GameManager : MonoBehaviour
             return;
         }
 
-        GetOrAddComponent<BalloonStageBuilder>().Build(transform);
+        _stageBuilder.Build(transform);
     }
 
     private IEnumerator NextPhase()
