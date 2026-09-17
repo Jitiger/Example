@@ -2,7 +2,6 @@ using UnityEngine;
 
 public sealed class RetroFactory : MonoBehaviour
 {
-    [SerializeField] private Color _background = new Color32(9, 20, 46, 255);
     [SerializeField] private float _balloonSpacing = 0.56f;
     [SerializeField] private float _balloonHeight = 1.02f;
     [SerializeField] private float _balloonRadius = 0.34f;
@@ -43,7 +42,6 @@ public sealed class RetroFactory : MonoBehaviour
     [SerializeField] private Sprite _enemyBalloonSprite;
 
     private static RetroFactory _config;
-    internal static Color BackgroundColor => _config._background;
     private float BalloonSpacing => _balloonSpacing;
     private float BalloonHeight => _balloonHeight;
     private float BalloonRadius => _balloonRadius;

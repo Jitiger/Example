@@ -140,7 +140,6 @@ public sealed class GameManager : MonoBehaviour
         gameCamera.orthographicSize = _cameraSize;
         gameCamera.transform.position = new Vector3(0f, 0f, _cameraDepth);
         gameCamera.clearFlags = CameraClearFlags.SolidColor;
-        gameCamera.backgroundColor = RetroFactory.BackgroundColor;
         return gameCamera;
     }
 
