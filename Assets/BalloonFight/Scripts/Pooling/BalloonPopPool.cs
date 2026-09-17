@@ -1,47 +1,27 @@
 using System.Collections.Generic;
-using BalloonFight.Config;
-using BalloonFight.Feedback;
 using UnityEngine;
 using UnityEngine.Pool;
 
 internal sealed class BalloonPopPool
 {
     private readonly Transform _parent;
-    private readonly BalloonFeedbackConfig _config;
+    private readonly BalloonPopEffect _template;
     private readonly Sprite _sprite;
     private readonly ObjectPool<BalloonPopEffect> _pool;
     private readonly HashSet<BalloonPopEffect> _active = new();
-    private readonly List<BalloonPopEffect> _scratch = new();
 
-    internal BalloonPopPool(Transform parent, BalloonFeedbackConfig config, Sprite sprite)
+    internal BalloonPopPool(Transform parent, BalloonPopEffect template, Sprite sprite)
     {
         _parent = parent;
-        _config = config;
+        _template = template;
         _sprite = sprite;
-        int capacity = Mathf.Max(1, config.PoolCapacity);
-        _pool = new ObjectPool<BalloonPopEffect>(Create, null,
-            effect => effect.OnDespawned(),
-            effect => { if (effect != null) Object.Destroy(effect.gameObject); },
-            true, capacity, capacity);
-        for (int index = 0; index < capacity; index++)
-        {
-            _scratch.Add(_pool.Get());
-        }
-        foreach (BalloonPopEffect effect in _scratch)
-        {
-            _pool.Release(effect);
-        }
-        _scratch.Clear();
+        int capacity = template.PoolCapacity;
+        _pool = new ObjectPool<BalloonPopEffect>(Create, null, effect => effect.OnDespawned(), effect => Object.Destroy(effect.gameObject), true, capacity, capacity);
     }
 
     internal void Play(Vector3 position)
     {
-        // Saturation drops only a cosmetic effect; no gameplay object is affected.
-        if (_active.Count >= Mathf.Max(1, _config.PoolCapacity))
-        {
-            return;
-        }
-
+        if (_active.Count >= _template.PoolCapacity) return;
         BalloonPopEffect effect = _pool.Get();
         _active.Add(effect);
         effect.transform.position = position;
@@ -50,36 +30,24 @@ internal sealed class BalloonPopPool
 
     internal void Release(BalloonPopEffect effect)
     {
-        if (effect != null && _active.Remove(effect))
-        {
-            _pool.Release(effect);
-        }
+        if (effect != null && _active.Remove(effect)) _pool.Release(effect);
     }
 
     internal void Reset()
     {
-        _scratch.Clear();
-        _scratch.AddRange(_active);
-        foreach (BalloonPopEffect effect in _scratch)
-        {
-            Release(effect);
-        }
-        _scratch.Clear();
+        foreach (BalloonPopEffect effect in new List<BalloonPopEffect>(_active)) Release(effect);
     }
 
-    internal void Clear()
-    {
-        Reset();
-        _pool.Clear();
-    }
+    internal void Clear() { Reset(); _pool.Clear(); }
 
     private BalloonPopEffect Create()
     {
         GameObject instance = new(nameof(BalloonPopEffect));
         instance.transform.SetParent(_parent, false);
-        instance.SetActive(false);
         BalloonPopEffect effect = instance.AddComponent<BalloonPopEffect>();
-        effect.Initialize(this, _config, _sprite);
+        _template.CopySettingsTo(effect);
+        effect.Initialize(this, _sprite);
+        effect.gameObject.SetActive(false);
         return effect;
     }
 }

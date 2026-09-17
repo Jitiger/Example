@@ -1,10 +1,8 @@
-using BalloonFight.Actors;
-using BalloonFight.Config;
 using UnityEngine;
 
 internal sealed class GameStateManager
 {
-    private readonly BalloonGameConfig _config;
+    private readonly GameManager _game;
     private readonly int[] _lives = new int[PlayerRoster.Count];
     private int _score;
     private int _phase;
@@ -19,26 +17,19 @@ internal sealed class GameStateManager
     internal bool IsChangingPhase => _isChangingPhase;
     internal bool IsPlaying => !_isGameOver && !_isAllClear;
 
-    internal GameStateManager(BalloonGameConfig config)
+    internal GameStateManager(GameManager game)
     {
-        _config = config;
+        _game = game;
         Reset();
     }
 
-    internal int GetLives(PlayerNumber playerNumber)
-    {
-        return _lives[(int)playerNumber];
-    }
+    internal int GetLives(PlayerNumber playerNumber) => _lives[(int)playerNumber];
 
     internal bool RegisterEnemyDefeat(int activeEnemyCount)
     {
-        _score += _config.EnemyScore;
-        if (activeEnemyCount > 0 || _isChangingPhase || !IsPlaying)
-        {
-            return false;
-        }
-
-        if (_phase >= _config.MaximumPhase)
+        _score += _game.EnemyScore;
+        if (activeEnemyCount > 0 || _isChangingPhase || !IsPlaying) return false;
+        if (_phase >= _game.MaximumPhase)
         {
             _isAllClear = true;
             return false;
@@ -52,33 +43,14 @@ internal sealed class GameStateManager
     {
         int index = (int)playerNumber;
         _lives[index] = Mathf.Max(0, _lives[index] - 1);
-        if (_lives[index] > 0)
-        {
-            return true;
-        }
-
-        if (AllPlayersEliminated())
-        {
-            _isGameOver = true;
-        }
-
+        if (_lives[index] > 0) return true;
+        if (AllPlayersEliminated()) _isGameOver = true;
         return false;
     }
 
-    internal bool CanRespawn(PlayerNumber playerNumber)
-    {
-        return IsPlaying && _lives[(int)playerNumber] > 0;
-    }
-
-    internal void AdvancePhase()
-    {
-        _phase++;
-    }
-
-    internal void CompletePhaseChange()
-    {
-        _isChangingPhase = false;
-    }
+    internal bool CanRespawn(PlayerNumber playerNumber) => IsPlaying && _lives[(int)playerNumber] > 0;
+    internal void AdvancePhase() => _phase++;
+    internal void CompletePhaseChange() => _isChangingPhase = false;
 
     internal void Reset()
     {
@@ -87,20 +59,14 @@ internal sealed class GameStateManager
         _isGameOver = false;
         _isAllClear = false;
         _isChangingPhase = false;
-        for (int index = 0; index < _lives.Length; index++)
-        {
-            _lives[index] = _config.StartingLives;
-        }
+        for (int index = 0; index < _lives.Length; index++) _lives[index] = _game.StartingLives;
     }
 
     private bool AllPlayersEliminated()
     {
         foreach (int life in _lives)
         {
-            if (life > 0)
-            {
-                return false;
-            }
+            if (life > 0) return false;
         }
 
         return true;

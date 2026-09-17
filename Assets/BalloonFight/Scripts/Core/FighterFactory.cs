@@ -1,96 +1,50 @@
-using BalloonFight.Actors;
-using BalloonFight.Config;
-using BalloonFight.Visual;
 using UnityEngine;
 
 internal static class FighterFactory
 {
-    internal static GameObject CreatePlayerPrefabObject(
-        Transform parent,
-        BalloonGameConfig config,
-        PlayerNumber playerNumber)
+    internal static PlayerController CreatePlayer(Transform parent, GameObject[] prefabs, PlayerNumber playerNumber)
     {
-        return CreatePlayer(parent, config, null, playerNumber).gameObject;
-    }
-
-    internal static GameObject CreateEnemyPrefabObject(Transform parent, BalloonGameConfig config, int variation)
-    {
-        return CreateEnemy(parent, config, null, variation).gameObject;
-    }
-
-    internal static PlayerController CreatePlayer(
-        Transform parent,
-        BalloonGameConfig config,
-        BalloonPrefabConfig prefabs,
-        PlayerNumber playerNumber)
-    {
-        GameObject prefab = prefabs == null ? null : prefabs.GetPlayer(playerNumber);
-        if (prefab != null)
-        {
-            GameObject instance = Object.Instantiate(prefab, parent);
-            PlayerController actor = instance.GetComponent<PlayerController>();
-            instance.GetComponent<FighterBody>().SetOwner(actor);
-            return actor;
-        }
-
-        int variation = (int)playerNumber;
-        GameObject fighter = CreateBody(
-            parent,
-            $"Player {variation + 1}",
-            config.GetPlayerSpawn(playerNumber),
-            config.PlayerGravity,
-            config);
-        RetroFactory.CreateFighter(fighter.transform, true, config.PlayerBalloonCount, variation);
-
+        GameObject prefab = GetPrefab(prefabs, (int)playerNumber);
+        if (prefab != null) return PrepareInstance(Object.Instantiate(prefab, parent)).GetComponent<PlayerController>();
+        GameObject fighter = CreateBody(parent, $"Player {(int)playerNumber + 1}");
         PlayerController player = fighter.AddComponent<PlayerController>();
         fighter.GetComponent<FighterBody>().SetOwner(player);
+        RetroFactory.CreateFighter(fighter.transform, true, player.BalloonLimit, (int)playerNumber);
         return player;
     }
 
-    internal static EnemyController CreateEnemy(
-        Transform parent,
-        BalloonGameConfig config,
-        BalloonPrefabConfig prefabs,
-        int variation)
+    internal static EnemyController CreateEnemy(Transform parent, GameObject[] prefabs, int variation)
     {
-        GameObject prefab = prefabs == null ? null : prefabs.GetEnemy(variation);
-        if (prefab != null)
-        {
-            GameObject instance = Object.Instantiate(prefab, parent);
-            EnemyController actor = instance.GetComponent<EnemyController>();
-            instance.GetComponent<FighterBody>().SetOwner(actor);
-            return actor;
-        }
-
-        GameObject fighter = CreateBody(parent, $"Enemy {variation + 1}", Vector2.zero, config.EnemyGravity, config);
-        RetroFactory.CreateFighter(fighter.transform, false, config.EnemyBalloonCount, variation);
-
+        GameObject prefab = GetPrefab(prefabs, variation);
+        if (prefab != null) return PrepareInstance(Object.Instantiate(prefab, parent)).GetComponent<EnemyController>();
+        GameObject fighter = CreateBody(parent, $"Enemy {variation + 1}");
         EnemyController enemy = fighter.AddComponent<EnemyController>();
         fighter.GetComponent<FighterBody>().SetOwner(enemy);
+        RetroFactory.CreateFighter(fighter.transform, false, enemy.BalloonLimit, variation);
         return enemy;
     }
 
-    private static GameObject CreateBody(
-        Transform parent,
-        string objectName,
-        Vector2 position,
-        float gravityScale,
-        BalloonGameConfig config)
+    private static GameObject PrepareInstance(GameObject instance)
+    {
+        Fighter fighter = instance.GetComponent<Fighter>();
+        instance.GetComponent<FighterBody>().SetOwner(fighter);
+        return instance;
+    }
+
+    private static GameObject CreateBody(Transform parent, string objectName)
     {
         GameObject fighter = new(objectName);
         fighter.transform.SetParent(parent);
-        fighter.transform.position = position;
-
         Rigidbody2D body = fighter.AddComponent<Rigidbody2D>();
-        body.gravityScale = gravityScale;
         body.freezeRotation = true;
         body.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
-        body.linearDamping = config.InitialDamping;
-
-        CapsuleCollider2D collider = fighter.AddComponent<CapsuleCollider2D>();
-        collider.size = config.BodySize;
-        collider.offset = config.BodyOffset;
+        fighter.AddComponent<CapsuleCollider2D>();
         fighter.AddComponent<FighterBody>();
         return fighter;
+    }
+
+    private static GameObject GetPrefab(GameObject[] prefabs, int index)
+    {
+        return prefabs == null || prefabs.Length == 0 ? null : prefabs[index % prefabs.Length];
     }
 }

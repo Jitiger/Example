@@ -1,68 +1,37 @@
-using BalloonFight.Actors;
-using BalloonFight.Config;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
-internal sealed class PlayerInput
+internal sealed class PlayerInput : MonoBehaviour
 {
-    private readonly BalloonInputConfig _config;
+    [Header("1P")]
+    [SerializeField] private Key[] _playerOneLeft = { Key.A };
+    [SerializeField] private Key[] _playerOneRight = { Key.D };
+    [SerializeField] private Key[] _playerOneFlap = { Key.Space, Key.W };
+    [Header("2P")]
+    [SerializeField] private Key[] _playerTwoLeft = { Key.LeftArrow };
+    [SerializeField] private Key[] _playerTwoRight = { Key.RightArrow };
+    [SerializeField] private Key[] _playerTwoFlap = { Key.UpArrow, Key.Enter };
+    [SerializeField] private Key _restart = Key.R;
 
-    internal bool RestartPressed => IsPressed(_config.Restart);
-
-    internal PlayerInput(BalloonInputConfig config)
-    {
-        _config = config;
-    }
-
-    internal float GetHorizontal(PlayerNumber playerNumber)
-    {
-        bool isLeftPressed = IsHeld(_config.GetLeftKeys(playerNumber));
-        bool isRightPressed = IsHeld(_config.GetRightKeys(playerNumber));
-        return (isRightPressed ? 1f : 0f) - (isLeftPressed ? 1f : 0f);
-    }
-
-    internal bool IsFlapPressed(PlayerNumber playerNumber)
-    {
-        return WasPressed(_config.GetFlapKeys(playerNumber));
-    }
-
-    private static bool IsPressed(Key key)
-    {
-        return Keyboard.current != null && Keyboard.current[key].wasPressedThisFrame;
-    }
+    internal Key Restart => _restart;
+    internal bool RestartPressed => Keyboard.current != null && Keyboard.current[_restart].wasPressedThisFrame;
+    internal float GetHorizontal(PlayerNumber playerNumber) => (IsHeld(GetRightKeys(playerNumber)) ? 1f : 0f) - (IsHeld(GetLeftKeys(playerNumber)) ? 1f : 0f);
+    internal bool IsFlapPressed(PlayerNumber playerNumber) => WasPressed(GetFlapKeys(playerNumber));
+    internal Key[] GetLeftKeys(PlayerNumber playerNumber) => playerNumber == PlayerNumber.One ? _playerOneLeft : _playerTwoLeft;
+    internal Key[] GetRightKeys(PlayerNumber playerNumber) => playerNumber == PlayerNumber.One ? _playerOneRight : _playerTwoRight;
+    internal Key[] GetFlapKeys(PlayerNumber playerNumber) => playerNumber == PlayerNumber.One ? _playerOneFlap : _playerTwoFlap;
 
     private static bool IsHeld(Key[] keys)
     {
-        if (Keyboard.current == null || keys == null)
-        {
-            return false;
-        }
-
-        foreach (Key key in keys)
-        {
-            if (Keyboard.current[key].isPressed)
-            {
-                return true;
-            }
-        }
-
+        if (Keyboard.current == null || keys == null) return false;
+        foreach (Key key in keys) if (Keyboard.current[key].isPressed) return true;
         return false;
     }
 
     private static bool WasPressed(Key[] keys)
     {
-        if (Keyboard.current == null || keys == null)
-        {
-            return false;
-        }
-
-        foreach (Key key in keys)
-        {
-            if (Keyboard.current[key].wasPressedThisFrame)
-            {
-                return true;
-            }
-        }
-
+        if (Keyboard.current == null || keys == null) return false;
+        foreach (Key key in keys) if (Keyboard.current[key].wasPressedThisFrame) return true;
         return false;
     }
 }

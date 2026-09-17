@@ -1,47 +1,33 @@
-using BalloonFight.Config;
 using UnityEngine;
 
-internal sealed class MapBoundary
+internal sealed class MapBoundary : MonoBehaviour
 {
-    private readonly Camera _camera;
-    private readonly BalloonGameConfig _config;
+    [SerializeField] private float _topLimit = 4.8f;
+    [SerializeField] private float _wrapPadding = 0.45f;
+    [SerializeField] private float _ceilingBounce = -0.25f;
+    private Camera _camera;
 
-    internal MapBoundary(Camera gameCamera, BalloonGameConfig config)
-    {
-        _camera = gameCamera;
-        _config = config;
-    }
+    internal void SetCamera(Camera gameCamera) => _camera = gameCamera;
 
     internal void Wrap(Transform target)
     {
-        float edge = _camera.orthographicSize * _camera.aspect + _config.WrapPadding;
+        float edge = _camera.orthographicSize * _camera.aspect + _wrapPadding;
         Vector3 position = target.position;
-        if (position.x > edge)
-        {
-            position.x = -edge;
-        }
-        else if (position.x < -edge)
-        {
-            position.x = edge;
-        }
-
+        if (position.x > edge) position.x = -edge;
+        else if (position.x < -edge) position.x = edge;
         target.position = position;
     }
 
     internal void ClampVertical(Transform target, Rigidbody2D body)
     {
-        if (target.position.y <= _config.TopLimit)
-        {
-            return;
-        }
-
+        if (target.position.y <= _topLimit) return;
         Vector3 position = target.position;
-        position.y = _config.TopLimit;
+        position.y = _topLimit;
         target.position = position;
         Vector2 velocity = body.linearVelocity;
         if (velocity.y > 0f)
         {
-            velocity.y *= _config.CeilingBounce;
+            velocity.y *= _ceilingBounce;
             body.linearVelocity = velocity;
         }
     }

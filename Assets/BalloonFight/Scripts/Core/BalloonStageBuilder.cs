@@ -1,43 +1,56 @@
-using BalloonFight.Config;
-using BalloonFight.Visual;
 using UnityEngine;
 
-internal static class BalloonStageBuilder
+[System.Serializable]
+internal struct PlatformDefinition
 {
-    internal static void Build(Transform parent, BalloonGameConfig config, BalloonVisualConfig visual)
+    [SerializeField] private Vector2 _position;
+    [SerializeField] private Vector2 _size;
+    internal PlatformDefinition(Vector2 position, Vector2 size)
+    {
+        _position = position;
+        _size = size;
+    }
+
+    internal Vector2 Position => _position;
+    internal Vector2 Size => _size;
+}
+
+internal sealed class BalloonStageBuilder : MonoBehaviour
+{
+    [SerializeField] private Color _starColor = new Color32(205, 226, 255, 255);
+    [SerializeField] private int _starCount = 46;
+    [SerializeField] private int _starSeed = 1984;
+    [SerializeField] private Rect _starBounds = new(-7f, -4f, 14f, 9f);
+    [SerializeField] private Color _waterColor = new Color32(22, 77, 145, 255);
+    [SerializeField] private Vector2 _waterPosition = new(0f, -5.05f);
+    [SerializeField] private Vector2 _waterSize = new(16f, 1.1f);
+    [SerializeField] private Color _platformColor = new Color32(72, 143, 90, 255);
+    [SerializeField] private PlatformDefinition[] _platforms =
+    {
+        new(new Vector2(0f, -4.55f), new Vector2(14.6f, 0.45f)),
+        new(new Vector2(-4.65f, -2.45f), new Vector2(2.7f, 0.32f)),
+        new(new Vector2(0f, -1.25f), new Vector2(2.9f, 0.32f)),
+        new(new Vector2(4.55f, -2.25f), new Vector2(2.7f, 0.32f)),
+        new(new Vector2(-2.8f, 1.1f), new Vector2(2.2f, 0.32f)),
+        new(new Vector2(2.8f, 1.35f), new Vector2(2.3f, 0.32f))
+    };
+
+    internal void Build(Transform parent)
     {
         Transform stage = new GameObject("Stage").transform;
         stage.SetParent(parent);
-
-        System.Random random = new(visual.StarSeed);
-        for (int index = 0; index < visual.StarCount; index++)
+        System.Random random = new(_starSeed);
+        for (int index = 0; index < _starCount; index++)
         {
-            float x = (float)(random.NextDouble() * visual.StarBounds.width + visual.StarBounds.x);
-            float y = (float)(random.NextDouble() * visual.StarBounds.height + visual.StarBounds.y);
-            float size = index % Mathf.Max(1, visual.LargeStarInterval) == 0 ? visual.LargeStarSize : visual.SmallStarSize;
-            RetroFactory.CreateBlock(stage, "Star", new Vector2(x, y), new Vector2(size, size), visual.StarColor, visual.StarOrder);
+            Vector2 position = new((float)(random.NextDouble() * _starBounds.width + _starBounds.x), (float)(random.NextDouble() * _starBounds.height + _starBounds.y));
+            RetroFactory.CreateBlock(stage, "Star", position, Vector2.one * 0.05f, _starColor, -20);
         }
 
-        RetroFactory.CreateBlock(stage, "Water", visual.WaterPosition, visual.WaterSize, visual.WaterColor, visual.WaterOrder);
-
-        foreach (PlatformDefinition platform in config.Platforms)
+        RetroFactory.CreateBlock(stage, "Water", _waterPosition, _waterSize, _waterColor, -15);
+        foreach (PlatformDefinition platform in _platforms)
         {
-            CreatePlatform(stage, platform.Position, platform.Size, visual);
+            GameObject block = RetroFactory.CreateBlock(stage, "Platform", platform.Position, platform.Size, _platformColor, -2);
+            block.AddComponent<BoxCollider2D>();
         }
-    }
-
-    private static void CreatePlatform(Transform parent, Vector2 position, Vector2 size, BalloonVisualConfig visual)
-    {
-        GameObject platform = RetroFactory.CreateBlock(parent, "Platform", position, size, visual.PlatformColor, visual.PlatformOrder);
-        platform.AddComponent<BoxCollider2D>();
-
-        GameObject top = RetroFactory.CreateBlock(
-            platform.transform,
-            "Top",
-            Vector2.zero,
-            visual.PlatformTopSize,
-            visual.PlatformTopColor,
-            visual.PlatformTopOrder);
-        top.transform.localPosition = visual.PlatformTopPosition;
     }
 }

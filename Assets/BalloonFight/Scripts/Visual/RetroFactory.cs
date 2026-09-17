@@ -1,11 +1,89 @@
-using BalloonFight.Actors;
-using BalloonFight.Config;
 using UnityEngine;
 
-internal static class RetroFactory
+internal sealed class RetroFactory : MonoBehaviour
 {
-    private static BalloonVisualConfig _config;
-    public static void Configure(BalloonVisualConfig config)
+    [SerializeField] private Color _background = new Color32(9, 20, 46, 255);
+    [SerializeField] private float _balloonSpacing = 0.56f;
+    [SerializeField] private float _balloonHeight = 1.02f;
+    [SerializeField] private float _balloonRadius = 0.34f;
+    [SerializeField] private Vector2 _balloonColliderOffset = new(0f, 0.28f);
+    [SerializeField] private Vector2 _ropeSize = new(0.035f, 0.8f);
+    [SerializeField] private float _ropeHorizontalFactor = 0.55f;
+    [SerializeField] private float _ropeHeight = 0.55f;
+    [SerializeField] private float _ropeAngleFactor = 28f;
+    [SerializeField] private Color _ropeColor = new Color32(231, 226, 193, 255);
+    [SerializeField] private int _ropeOrder = 8;
+    [SerializeField] private int _balloonOrder = 9;
+    [SerializeField] private int _actorOrder = 10;
+    [SerializeField] private Color _playerBody = new Color32(42, 117, 215, 255);
+    [SerializeField] private Color _playerHelmet = new Color32(232, 55, 55, 255);
+    [SerializeField] private Color _playerSkin = new Color32(249, 207, 153, 255);
+    [SerializeField] private Color _playerTwoBody = new Color32(50, 180, 105, 255);
+    [SerializeField] private Color _playerTwoHelmet = new Color32(248, 205, 65, 255);
+    [SerializeField] private Color _playerTwoSkin = new Color32(249, 207, 153, 255);
+    [SerializeField] private Color _enemyABody = new Color32(134, 68, 179, 255);
+    [SerializeField] private Color _enemyAHelmet = new Color32(240, 188, 65, 255);
+    [SerializeField] private Color _enemyASkin = new Color32(166, 211, 102, 255);
+    [SerializeField] private Color _enemyBBody = new Color32(63, 153, 129, 255);
+    [SerializeField] private Color _enemyBHelmet = new Color32(215, 75, 126, 255);
+    [SerializeField] private Color _enemyBSkin = new Color32(248, 194, 137, 255);
+    [SerializeField] private Color _playerBalloonA = new Color32(237, 55, 72, 255);
+    [SerializeField] private Color _playerBalloonB = new Color32(250, 190, 54, 255);
+    [SerializeField] private Color _playerTwoBalloonA = new Color32(65, 205, 245, 255);
+    [SerializeField] private Color _playerTwoBalloonB = new Color32(120, 235, 130, 255);
+    [SerializeField] private Color _enemyBalloon = new Color32(214, 82, 177, 255);
+    [SerializeField] private Sprite _playerSprite;
+    [SerializeField] private Sprite _playerTwoSprite;
+    [SerializeField] private Sprite _enemyASprite;
+    [SerializeField] private Sprite _enemyBSprite;
+    [SerializeField] private Sprite _playerBalloonASprite;
+    [SerializeField] private Sprite _playerBalloonBSprite;
+    [SerializeField] private Sprite _playerTwoBalloonASprite;
+    [SerializeField] private Sprite _playerTwoBalloonBSprite;
+    [SerializeField] private Sprite _enemyBalloonSprite;
+
+    private static RetroFactory _config;
+    internal static Color BackgroundColor => _config._background;
+    private float BalloonSpacing => _balloonSpacing;
+    private float BalloonHeight => _balloonHeight;
+    private float BalloonRadius => _balloonRadius;
+    private Vector2 BalloonColliderOffset => _balloonColliderOffset;
+    private Vector2 RopeSize => _ropeSize;
+    private float RopeHorizontalFactor => _ropeHorizontalFactor;
+    private float RopeHeight => _ropeHeight;
+    private float RopeAngleFactor => _ropeAngleFactor;
+    private Color RopeColor => _ropeColor;
+    private int RopeOrder => _ropeOrder;
+    private int BalloonOrder => _balloonOrder;
+    private int ActorOrder => _actorOrder;
+    private Color PlayerBody => _playerBody;
+    private Color PlayerHelmet => _playerHelmet;
+    private Color PlayerSkin => _playerSkin;
+    private Color PlayerTwoBody => _playerTwoBody;
+    private Color PlayerTwoHelmet => _playerTwoHelmet;
+    private Color PlayerTwoSkin => _playerTwoSkin;
+    private Color EnemyABody => _enemyABody;
+    private Color EnemyAHelmet => _enemyAHelmet;
+    private Color EnemyASkin => _enemyASkin;
+    private Color EnemyBBody => _enemyBBody;
+    private Color EnemyBHelmet => _enemyBHelmet;
+    private Color EnemyBSkin => _enemyBSkin;
+    private Color PlayerBalloonA => _playerBalloonA;
+    private Color PlayerBalloonB => _playerBalloonB;
+    private Color PlayerTwoBalloonA => _playerTwoBalloonA;
+    private Color PlayerTwoBalloonB => _playerTwoBalloonB;
+    private Color EnemyBalloon => _enemyBalloon;
+    private Sprite PlayerSprite => _playerSprite;
+    private Sprite PlayerTwoSprite => _playerTwoSprite;
+    private Sprite EnemyASprite => _enemyASprite;
+    private Sprite EnemyBSprite => _enemyBSprite;
+    private Sprite PlayerBalloonASprite => _playerBalloonASprite;
+    private Sprite PlayerBalloonBSprite => _playerBalloonBSprite;
+    private Sprite PlayerTwoBalloonASprite => _playerTwoBalloonASprite;
+    private Sprite PlayerTwoBalloonBSprite => _playerTwoBalloonBSprite;
+    private Sprite EnemyBalloonSprite => _enemyBalloonSprite;
+
+    internal static void Configure(RetroFactory config)
     {
         _config = config;
         _player = null;

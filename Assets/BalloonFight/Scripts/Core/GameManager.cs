@@ -1,35 +1,48 @@
 using System.Collections;
-using System.Collections.Generic;
-using BalloonFight.Actors;
-using BalloonFight.Config;
-using BalloonFight.Feedback;
-using BalloonFight.Input;
-using BalloonFight.Pooling;
-using BalloonFight.UI;
-using BalloonFight.Visual;
 using UnityEngine;
 
 internal sealed class GameManager : MonoBehaviour
 {
-    private const string ConfigResourcePath = "BalloonGameConfig";
+    [Header("게임 진행")]
+    [SerializeField] private int _targetFrameRate = 60;
+    [SerializeField] private int _startingLives = 3;
+    [SerializeField] private int _maximumPhase = 3;
+    [SerializeField] private int _enemyScore = 500;
+    [SerializeField] private float _phaseDelay = 1.2f;
+    [SerializeField] private float _respawnDelay = 1.1f;
+    [SerializeField] private float _respawnInvincibility = 1.4f;
 
-    [SerializeField] private BalloonGameConfig _config;
-    [SerializeField] private BalloonPrefabConfig _prefabs;
+    [Header("카메라와 스폰")]
+    [SerializeField] private float _cameraSize = 5.5f;
+    [SerializeField] private float _cameraDepth = -10f;
+    [SerializeField] private int _phaseEnemyOffset = 2;
+    [SerializeField] private int _enemyPoolCapacity = 5;
+    [SerializeField] private Vector2[] _playerSpawns = { new(-1f, -3.35f), new(1f, -3.35f) };
+    [SerializeField] private Vector2[] _enemySpawns =
+    {
+        new(-4.7f, 0.2f), new(4.7f, 0.45f), new(-1.8f, 2.7f), new(1.9f, 3f), new(0f, 0.65f)
+    };
 
-    private readonly List<ScriptableObject> _ownedSettings = new();
-    private BalloonFeedbackConfig _feedback;
+    [Header("선택 프리팹")]
+    [SerializeField] private GameObject[] _playerPrefabs;
+    [SerializeField] private GameObject[] _enemyPrefabs;
+    [SerializeField] private GameObject _stagePrefab;
+
     private GameStateManager _gameStateManager;
-    private BalloonHud _hud;
-    private BalloonInputConfig _inputConfig;
     private PlayerInput _input;
     private BalloonPopPool _popPool;
     private FighterSpawner _spawner;
-    private BalloonUiConfig _ui;
-    private BalloonVisualConfig _visual;
+    private BalloonHud _hud;
     private MapBoundary _mapBoundary;
 
     internal PlayerInput Input => _input;
     internal bool IsPlaying => _gameStateManager.IsPlaying;
+    internal int StartingLives => _startingLives;
+    internal int MaximumPhase => _maximumPhase;
+    internal int EnemyScore => _enemyScore;
+    internal int PhaseEnemyOffset => _phaseEnemyOffset;
+    internal int EnemyPoolCapacity => _enemyPoolCapacity;
+    internal Vector2[] EnemySpawns => _enemySpawns;
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
     private static void Boot()
@@ -42,26 +55,21 @@ internal sealed class GameManager : MonoBehaviour
 
     private void Awake()
     {
-        _config = LoadSettings(ConfigResourcePath, _config);
-        _prefabs = LoadSettings(nameof(BalloonPrefabConfig), _prefabs);
-        _inputConfig = LoadSettings<BalloonInputConfig>();
-        _visual = LoadSettings<BalloonVisualConfig>();
-        _ui = LoadSettings<BalloonUiConfig>();
-        _feedback = LoadSettings<BalloonFeedbackConfig>();
-        _input = new PlayerInput(_inputConfig);
-        _gameStateManager = new GameStateManager(_config);
-        RetroFactory.Configure(_visual);
+        _input = GetOrAddComponent<PlayerInput>();
+        _hud = GetOrAddComponent<BalloonHud>();
+        _mapBoundary = GetOrAddComponent<MapBoundary>();
+        RetroFactory.Configure(GetOrAddComponent<RetroFactory>());
+        _gameStateManager = new GameStateManager(this);
     }
 
     private void Start()
     {
-        Application.targetFrameRate = _config.TargetFrameRate;
+        Application.targetFrameRate = _targetFrameRate;
         Camera gameCamera = GetOrCreateCamera();
-        _mapBoundary = new MapBoundary(gameCamera, _config);
+        _mapBoundary.SetCamera(gameCamera);
         BuildStage();
-        _spawner = new FighterSpawner(transform, this, _config, _prefabs);
-        _popPool = new BalloonPopPool(transform, _feedback, RetroFactory.GetSquare());
-        _hud = new BalloonHud(_ui, _inputConfig);
+        _spawner = new FighterSpawner(transform, this, _playerPrefabs, _enemyPrefabs);
+        _popPool = new BalloonPopPool(transform, GetOrAddComponent<BalloonPopEffect>(), RetroFactory.GetSquare());
         _spawner.SpawnAllPlayers();
         _spawner.SpawnPhase(_gameStateManager.Phase);
     }
@@ -76,45 +84,25 @@ internal sealed class GameManager : MonoBehaviour
 
     private void OnGUI()
     {
-        _hud?.Draw(
-            _gameStateManager.Score,
-            _gameStateManager.Phase,
-            _gameStateManager.GetLives(PlayerNumber.One),
-            _gameStateManager.GetLives(PlayerNumber.Two),
-            _spawner.ActiveEnemyCount,
-            _gameStateManager.IsChangingPhase,
-            _gameStateManager.IsGameOver,
-            _gameStateManager.IsAllClear);
+        _hud?.Draw(_gameStateManager.Score, _gameStateManager.Phase,
+            _gameStateManager.GetLives(PlayerNumber.One), _gameStateManager.GetLives(PlayerNumber.Two),
+            _spawner.ActiveEnemyCount, _gameStateManager.IsChangingPhase,
+            _gameStateManager.IsGameOver, _gameStateManager.IsAllClear, _input);
     }
 
     private void OnDestroy()
     {
         _popPool?.Clear();
         _spawner?.Clear();
-        foreach (ScriptableObject settings in _ownedSettings)
-        {
-            Destroy(settings);
-        }
     }
 
-    internal void BalloonPopped(Vector3 position)
-    {
-        _popPool?.Play(position);
-    }
-
-    internal PlayerController GetNearestPlayer(Vector3 position)
-    {
-        return _spawner.GetNearestPlayer(position);
-    }
+    internal void BalloonPopped(Vector3 position) => _popPool?.Play(position);
+    internal PlayerController GetNearestPlayer(Vector3 position) => _spawner.GetNearestPlayer(position);
+    internal Vector2 GetPlayerSpawn(PlayerNumber playerNumber) => _playerSpawns[(int)playerNumber];
 
     internal void EnemyDefeated(EnemyController enemy)
     {
-        if (!_spawner.RemoveEnemy(enemy))
-        {
-            return;
-        }
-
-        if (_gameStateManager.RegisterEnemyDefeat(_spawner.ActiveEnemyCount))
+        if (_spawner.RemoveEnemy(enemy) && _gameStateManager.RegisterEnemyDefeat(_spawner.ActiveEnemyCount))
         {
             StartCoroutine(NextPhase());
         }
@@ -122,38 +110,19 @@ internal sealed class GameManager : MonoBehaviour
 
     internal void PlayerDefeated(PlayerController player)
     {
-        if (player == null || !_gameStateManager.IsPlaying)
-        {
-            return;
-        }
-
-        if (_gameStateManager.RegisterPlayerDefeat(player.PlayerNumber))
+        if (player != null && _gameStateManager.IsPlaying && _gameStateManager.RegisterPlayerDefeat(player.PlayerNumber))
         {
             StartCoroutine(RespawnPlayer(player.PlayerNumber));
         }
     }
 
-    internal void Wrap(Transform target)
-    {
-        _mapBoundary.Wrap(target);
-    }
+    internal void Wrap(Transform target) => _mapBoundary.Wrap(target);
+    internal void ClampVertical(Transform target, Rigidbody2D body) => _mapBoundary.ClampVertical(target, body);
 
-    internal void ClampVertical(Transform target, Rigidbody2D body)
+    private T GetOrAddComponent<T>() where T : Component
     {
-        _mapBoundary.ClampVertical(target, body);
-    }
-
-    private T LoadSettings<T>(string resourcePath = null, T assigned = null) where T : ScriptableObject
-    {
-        T settings = assigned != null ? assigned : Resources.Load<T>(resourcePath ?? typeof(T).Name);
-        if (settings != null)
-        {
-            return settings;
-        }
-
-        settings = ScriptableObject.CreateInstance<T>();
-        _ownedSettings.Add(settings);
-        return settings;
+        T component = GetComponent<T>();
+        return component != null ? component : gameObject.AddComponent<T>();
     }
 
     private Camera GetOrCreateCamera()
@@ -168,27 +137,27 @@ internal sealed class GameManager : MonoBehaviour
         }
 
         gameCamera.orthographic = true;
-        gameCamera.orthographicSize = _config.CameraSize;
-        gameCamera.transform.position = new Vector3(0f, 0f, _config.CameraDepth);
+        gameCamera.orthographicSize = _cameraSize;
+        gameCamera.transform.position = new Vector3(0f, 0f, _cameraDepth);
         gameCamera.clearFlags = CameraClearFlags.SolidColor;
-        gameCamera.backgroundColor = _visual.Background;
+        gameCamera.backgroundColor = RetroFactory.BackgroundColor;
         return gameCamera;
     }
 
     private void BuildStage()
     {
-        if (_prefabs.Stage != null)
+        if (_stagePrefab != null)
         {
-            Instantiate(_prefabs.Stage, transform);
+            Instantiate(_stagePrefab, transform);
             return;
         }
 
-        BalloonStageBuilder.Build(transform, _config, _visual);
+        GetOrAddComponent<BalloonStageBuilder>().Build(transform);
     }
 
     private IEnumerator NextPhase()
     {
-        yield return new WaitForSeconds(_config.PhaseDelay);
+        yield return new WaitForSeconds(_phaseDelay);
         _gameStateManager.AdvancePhase();
         _spawner.SpawnPhase(_gameStateManager.Phase);
         _gameStateManager.CompletePhaseChange();
@@ -196,14 +165,11 @@ internal sealed class GameManager : MonoBehaviour
 
     private IEnumerator RespawnPlayer(PlayerNumber playerNumber)
     {
-        yield return new WaitForSeconds(_config.RespawnDelay);
-        if (!_gameStateManager.CanRespawn(playerNumber))
+        yield return new WaitForSeconds(_respawnDelay);
+        if (_gameStateManager.CanRespawn(playerNumber))
         {
-            yield break;
+            _spawner.SpawnPlayer(playerNumber).SetInvincible(_respawnInvincibility);
         }
-
-        PlayerController player = _spawner.SpawnPlayer(playerNumber);
-        player.SetInvincible(_config.RespawnInvincibility);
     }
 
     private void Restart()
